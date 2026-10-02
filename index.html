@@ -247,7 +247,7 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .grabber { width: 38px; height: 5px; border-radius: 3px; background: var(--line); margin: 8px auto 0; }
 .sheet-head { padding: 6px 16px 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .sheet-head h2 { font-size: 22px; }
-.sheet-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.sheet-body { touch-action: manipulation; flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 .sheet-foot { border-top: 1px solid var(--line); background: var(--card); padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; }
 .preview { display: flex; gap: 6px; flex-wrap: wrap; }
 .preview > span { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; padding: 6px 10px 6px 9px; border-radius: 10px; background: var(--surface-2); font-variant-numeric: tabular-nums; max-width: 100%; }
@@ -1127,6 +1127,7 @@ function render() {
   view.className = 'stack' + (same ? '' : ' enter' + dir);
   view.innerHTML = ui.tab === 'rules' ? RULES[S.lang]() : ui.setup ? setupView() : gameView();
   syncWarns(adoptBox('live-warns', oldBox), liveWarns(), same);
+  if (!same) { clearTimeout(ui.enterT); ui.enterT = setTimeout(() => { if (ui.viewKey === key) view.className = 'stack'; }, 700); }
   if (ui.grow) { expand(document.querySelector(ui.grow)); ui.grow = null; }
   ui.viewKey = key;
   ui.popIdx = -1;
@@ -1257,7 +1258,12 @@ document.addEventListener('click', e => {
       document.getElementById(`setup-name-${ui.setup.sides.length - 1}`)?.focus();
       return;
     }
-    case 'setup-remove': collapse(document.getElementById('setup-row-' + i), () => { ui.setup.sides.splice(i, 1); render(); }); return;
+    case 'setup-remove': {
+      const side = ui.setup.sides[i], row = document.getElementById('setup-row-' + i);
+      if (!side || row?.dataset.leaving || ui.setup.sides.length - document.querySelectorAll('.setup-row[data-leaving]').length <= 2) return;
+      collapse(row, () => { if (!ui.setup) return; ui.setup.sides = ui.setup.sides.filter(x => x !== side); render(); });
+      return;
+    }
     case 'setup-color': ui.setup.sides[i].color = (ui.setup.sides[i].color + 1) % COLORS; render(); return;
     case 'setup-teams': ui.setup.teams = !ui.setup.teams; render(); return;
     case 'setup-target': ui.setup.target = +v; render(); return;
@@ -1271,11 +1277,11 @@ document.addEventListener('click', e => {
     case 'scope': d.scope[i] = Math.max(0, d.scope[i] + +v); ui.stepIdx = i; renderSheet(); return;
     case 'pick': { const val = v === 'tie' ? 'tie' : +v, cat = el.dataset.cat; d[cat] = d[cat] === val ? null : val; ui.picked = [cat, val]; renderSheet(); return; }
     case 'calc':
-      if (ui.calc) { collapse(document.querySelector('.prim'), () => { ui.calc = null; ui.calcCell = null; renderSheet(); }); return; }
+      if (ui.calc) { collapse(document.querySelector('.prim'), () => { if (!ui.draft) return; ui.calc = null; ui.calcCell = null; renderSheet(); }); return; }
       ui.calc = S.sides.map(() => ['', '', '', '']); ui.calcCell = [0, 0]; ui.grow = '.prim'; renderSheet(); return;
     case 'pcell': {
       const si = +el.dataset.s, cur = ui.calcCell;
-      if (cur && cur[0] === i && cur[1] === si) { collapse(document.querySelector('.picker'), () => { ui.calcCell = null; renderSheet(); }); return; }
+      if (cur && cur[0] === i && cur[1] === si) { collapse(document.querySelector('.picker'), () => { if (!ui.draft) return; ui.calcCell = null; renderSheet(); }); return; }
       ui.calcCell = [i, si]; if (!cur || cur[0] !== i) ui.grow = '.picker'; renderSheet(); return;
     }
     case 'pcard': {
@@ -1354,7 +1360,7 @@ document.addEventListener('input', e => {
 
 document.getElementById('tab-game-i').innerHTML = spr('tabGame', 4 / 3);
 document.getElementById('tab-rules-i').innerHTML = spr('tabRules', 4 / 3);
-Promise.race([document.fonts?.ready, new Promise(r => setTimeout(r, 400))]).finally(() => { render(); document.documentElement.classList.remove('boot'); });
+Promise.race([document.fonts ? document.fonts.load('700 16px "Instrument Sans"') : null, new Promise(r => setTimeout(r, 400))].filter(Boolean)).finally(() => { render(); document.documentElement.classList.remove('boot'); });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   // Reload once when a new version takes over, and look for one whenever the app comes back to the foreground.
