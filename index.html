@@ -989,6 +989,8 @@ function sheetView() {
   const pts = scoreRound(d, n);
   const all = totals();
   const base = ui.editIndex != null ? all.map((v, i) => v - scoreRound(S.rounds[ui.editIndex], n)[i]) : all;
+  // a new round starts from what the cards show (saved points plus live scopas)
+  const from = ui.editIndex != null ? base : liveTotals();
   const names = { carte: 'Carte', denari: 'Denari', settebello: 'Settebello', primiera: 'Primiera' };
   const openN = CATS.filter(k => d[k] == null).length;
   ui.sheetWarns = sanity(d, ui.calc, n, S.teams).filter(([k]) => !ui.dismissed.includes(k));
@@ -1019,7 +1021,7 @@ function sheetView() {
   <div class="sheet-foot">
     <div class="warns" id="sheet-warns" role="status"></div>
     <div class="progress-row"><div class="progress" aria-hidden="true">${CATS.map((k, j) => `<i class="${d[k] != null ? 'done' : ''} ${d[k] != null && ui.lastDone && !ui.lastDone[j] ? 'new' : ''}"></i>`).join('')}</div><span class="${openN ? 'open' : 'ok'}">${openN ? L.stillOpen(openN) : L.allSet}</span></div>
-    <div class="preview">${S.sides.map((s, i) => `<span class="${pts[i] ? 'up' : ''}" style="--c:${col(i)}">${sw(col(i))}<em>${esc(nameOf(i))}</em><span class="tot">${base[i]}</span><span class="arrow">→</span><b class="${ui.bumpPrev && pts[i] !== ui.bumpPrev[i] ? 'bump' : ''}">${base[i] + pts[i]}</b></span>`).join('')}</div>
+    <div class="preview">${S.sides.map((s, i) => `<span class="${pts[i] ? 'up' : ''}" style="--c:${col(i)}">${sw(col(i))}<em>${esc(nameOf(i))}</em><span class="tot">${from[i]}</span><span class="arrow">→</span><b class="${ui.bumpPrev && pts[i] !== ui.bumpPrev[i] ? 'bump' : ''}">${base[i] + pts[i]}</b></span>`).join('')}</div>
     <button class="btn primary block" data-act="save-round">${ui.editIndex != null ? L.saveChanges : L.save}</button>
   </div>`;
 }
@@ -1189,7 +1191,7 @@ function render() {
   view.className = 'stack' + (same ? '' : ' enter' + dir);
   view.innerHTML = ui.tab === 'rules' ? RULES[S.lang]() : ui.setup ? setupView() : gameView();
   syncWarns(adoptBox('live-warns', oldBox), liveWarns(), same);
-  if (!same) { clearTimeout(ui.enterT); ui.enterT = setTimeout(() => { if (ui.viewKey === key) view.className = 'stack'; }, 700); }
+  if (!same) { clearTimeout(ui.enterT); ui.enterT = setTimeout(() => { if (ui.viewKey === key) view.className = 'stack'; }, 900); }
   if (ui.grow) { expand(document.querySelector(ui.grow)); ui.grow = null; }
   ui.viewKey = key;
   ui.popIdx = -1;
