@@ -112,10 +112,11 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 }
 .pcard.lead { border-color: var(--c); }
 .pcard::after { content: ""; position: absolute; inset: 0; background: var(--c); opacity: 0; pointer-events: none; }
-.pcard.flash::after { animation: flash .7s var(--ease); }
-.pcard.flash { animation: hit .45s var(--spring); }
+.pcard.flash { animation: flashBg .7s var(--ease); }
+@keyframes flashBg { from { background: color-mix(in srgb, var(--c) 30%, var(--card)); } }
+.pcard.flash .tile { animation: hit .45s var(--spring); }
 @keyframes flash { 0% { opacity: .38; } 100% { opacity: 0; } }
-@keyframes hit { 0% { transform: scale(1); } 30% { transform: scale(1.025); } 100% { transform: scale(1); } }
+@keyframes hit { 0% { transform: scale(1); } 30% { transform: scale(1.08) rotate(-3deg); } 100% { transform: scale(1); } }
 .pcard.gain::after { animation: flash 1.1s var(--ease) .15s both; }
 .tile { position: relative; width: 52px; height: 64px; border: 2px solid var(--c); border-radius: 7px; background: var(--card); display: grid; place-items: center; }
 .tile::before, .tile::after { content: ""; position: absolute; width: 6px; height: 6px; background: var(--c); }
@@ -192,6 +193,13 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 /* Setup */
 .field { display: flex; flex-direction: column; gap: 9px; }
 .hint { font-size: 13px; color: var(--ink-3); margin: 0; }
+.setup-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.teamtoggle { display: inline-flex; align-items: center; gap: 7px; flex: none; border: 0; background: none; padding: 6px 0; font-size: 13px; font-weight: 600; color: var(--ink-3); --c: var(--ink-2); }
+.teamtoggle .check { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--line); display: grid; place-items: center; transition: background .18s, border-color .18s; }
+.teamtoggle.on { color: var(--ink-2); }
+.teamtoggle.on .check { background: var(--c); border-color: var(--c); }
+.teamtoggle.on .check::after { content: ""; width: 6px; height: 3px; border-left: 2px solid var(--card); border-bottom: 2px solid var(--card); transform: translateY(-1px) rotate(-45deg); }
+#live-warns:empty { display: none; }
 .setup-row { display: grid; grid-template-columns: 48px 1fr 40px; gap: 10px; align-items: center; animation: rise .3s var(--ease) both; }
 .colorbtn { position: relative; width: 48px; height: 48px; border-radius: 10px; border: 2px solid var(--c); background: var(--card); display: grid; place-items: center; transition: transform .15s var(--spring); }
 .colorbtn:active { transform: scale(.9) rotate(-6deg); }
@@ -588,9 +596,9 @@ const T = {
     wins: n => `${n} gewinnt!`, finalScore: 'Endstand',
     tieTop: names => `Gleichstand an der Spitze (${names}). Spielt noch eine Runde.`,
     setupTitle: 'Neue Partie', sides: 'Wer spielt?',
-    sidesHint: 'Ein Eintrag pro Spieler oder pro Team. Tippe auf das Symbol, um die Farbe zu wechseln.',
+    sidesHint: 'Tippe auf das Symbol, um die Farbe zu wechseln.', teams: 'In Teams spielen',
     replaceWarn: 'Die laufende Partie wird dabei beendet.',
-    addSide: 'Spieler oder Team hinzufügen', namePh: n => `Spieler ${n}`, remove: 'Entfernen', color: 'Farbe wechseln',
+    addSide: tm => tm ? 'Team hinzufügen' : 'Spieler hinzufügen', namePh: (n, tm) => tm ? `Team ${n}` : `Spieler ${n}`, remove: 'Entfernen', color: 'Farbe wechseln',
     target: 'Gespielt wird bis', start: 'Los geht’s', cancel: 'Abbrechen',
     close: 'Schließen', sheetTitle: n => `Runde ${n} werten`, editRound: n => `Runde ${n} ändern`,
     scopeSub: 'in dieser Runde, live mitgezählt',
@@ -606,9 +614,7 @@ const T = {
     suit: { denari: 'Denari', coppe: 'Coppe', spade: 'Spade', bastoni: 'Bastoni' },
     none: '–',
     warn: {
-      scopeSide: (i, v) => `${v} Scope für ${nameOf(i)} in einer Runde? Das ist sehr viel.`,
-      scopeAll: v => `${v} Scope in einer Runde? Das ist sehr viel.`,
-      scopeMax: (i, v, max, n) => `${v} Scope für ${nameOf(i)} gehen nicht: Bei ${n} Spielern bzw. Teams legt jeder nur ${max} Karten pro Runde.`,
+      scopeMax: (i, v, max, n) => `${v} Scope für ${nameOf(i)} gehen nicht: Bei ${n} Spielern legt jeder höchstens ${max} Karten pro Runde.`,
       scopeAllMax: v => `${v} Scope in einer Runde gehen nicht: Nach jeder Scopa ist der Tisch leer, also höchstens 18.`,
       sette: (h, sb) => `Laut Rechner hat ${nameOf(h)} die 7 Denari, der Settebello ist aber bei ${nameOf(sb)}.`,
       setteNo7: sb => `${nameOf(sb)} hat den Settebello, im Rechner steht bei Denari aber nicht die 7.`,
@@ -625,9 +631,9 @@ const T = {
     wins: n => `${n} wins!`, finalScore: 'Final score',
     tieTop: names => `Tied at the top (${names}). Play one more round.`,
     setupTitle: 'New game', sides: 'Who’s playing?',
-    sidesHint: 'One entry per player or per team. Tap the symbol to change the colour.',
+    sidesHint: 'Tap the symbol to change the colour.', teams: 'Play in teams',
     replaceWarn: 'This ends the current game.',
-    addSide: 'Add player or team', namePh: n => `Player ${n}`, remove: 'Remove', color: 'Change colour',
+    addSide: tm => tm ? 'Add team' : 'Add player', namePh: (n, tm) => tm ? `Team ${n}` : `Player ${n}`, remove: 'Remove', color: 'Change colour',
     target: 'Play to', start: 'Let’s play', cancel: 'Cancel',
     close: 'Close', sheetTitle: n => `Score round ${n}`, editRound: n => `Edit round ${n}`,
     scopeSub: 'this round, counted live',
@@ -643,9 +649,7 @@ const T = {
     suit: { denari: 'Coins', coppe: 'Cups', spade: 'Swords', bastoni: 'Clubs' },
     none: '–',
     warn: {
-      scopeSide: (i, v) => `${v} scopas for ${nameOf(i)} in one round? That’s a lot.`,
-      scopeAll: v => `${v} scopas in one round? That’s a lot.`,
-      scopeMax: (i, v, max, n) => `${v} scopas for ${nameOf(i)} isn’t possible: with ${n} players or teams, each plays only ${max} cards per round.`,
+      scopeMax: (i, v, max, n) => `${v} scopas for ${nameOf(i)} isn’t possible: with ${n} players, each plays at most ${max} cards per round.`,
       scopeAllMax: v => `${v} scopas in one round isn’t possible: the table is empty after every scopa, so 18 at most.`,
       sette: (h, sb) => `The calculator has the 7 of coins with ${nameOf(h)}, but the settebello is set for ${nameOf(sb)}.`,
       setteNo7: sb => `${nameOf(sb)} has the settebello, but their best coin in the calculator isn’t the 7.`,
@@ -659,11 +663,11 @@ function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return 
 function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
 const freshState = () => ({ lang: 'de', target: 11, sides: [], rounds: [], live: [] });
 const blankRound = (n, scope) => ({ scope: scope ? scope.slice() : Array(n).fill(0), carte: null, denari: null, settebello: null, primiera: null });
-const blankSetup = () => ({ sides: [{ name: '', color: 0 }, { name: '', color: 1 }], target: 11 });
+const blankSetup = () => ({ sides: [{ name: '', color: 0 }, { name: '', color: 1 }], target: 11, teams: false });
 
 let S = load() || freshState();
 const ui = { tab: 'game', setup: S.sides.length ? null : blankSetup(), draft: null, editIndex: null, confirmDel: false, calc: null,
-  popIdx: -1, picked: null, viewKey: '', shownTot: null, undo: null };
+  popIdx: -1, picked: null, viewKey: '', shownTot: null, undo: null, dismissed: [] };
 const t = () => T[S.lang] || T.de;
 
 /* ---------- scoring (pure) ---------- */
@@ -683,31 +687,30 @@ function primiera(cards) {
   }
   return { prim, winner };
 }
-// plausibility hints: never block, just flag what rarely or never happens in a real round
-function sanity(r, calc, n) {
+// Hints for input that can't happen in a real round. Only certain contradictions, no "unusual" guesses.
+function sanity(r, calc, n, teams) {
   const out = [], sc = r.scope.slice(0, n), sum = sc.reduce((a, b) => a + b, 0);
-  // 36 cards get played per round (40 minus 4 on the table), split evenly across the sides.
-  // A scopa empties the table, so the next play can't be one: at most every other play, 18 in total.
-  const maxSide = Math.min(Math.ceil(36 / n), 18), maxAll = 18;
-  const softSide = n <= 2 ? 6 : n === 3 ? 4 : 3, softAll = 8;
+  // 36 cards are played per round (40 minus the 4 on the table). A scopa empties the table, so the
+  // next play can't be one: at most every other play, 18 per round. Dealt 3 at a time, a solo player
+  // gets at most ceil(36 / 3n) hands; with teams we don't know the split, so only the total counts.
+  const maxSide = teams ? 18 : 3 * Math.ceil(36 / (3 * n));
   let flagged = false;
-  sc.forEach((v, i) => {
-    if (v > maxSide) { out.push(['scopeMax' + i, 'scopeMax', i, v, maxSide, n]); flagged = true; }
-    else if (v >= softSide) { out.push(['scope' + i, 'scopeSide', i, v]); flagged = true; }
-  });
-  if (sum > maxAll) out.push(['scopeAllMax', 'scopeAllMax', sum]);
-  else if (!flagged && sum >= softAll) out.push(['scope', 'scopeAll', sum]);
-  if (calc) {
+  if (maxSide < 18) sc.forEach((v, i) => { if (v > maxSide) { out.push(['scopeMax' + i, 'scopeMax', i, v, maxSide, n]); flagged = true; } });
+  if (!flagged && sum > 18) out.push(['scopeAllMax', 'scopeAllMax', sum]);
+  if (calc && r.settebello != null) {
     const has7 = calc.findIndex(row => row[0] === '7'), sb = r.settebello;
-    if (typeof sb === 'number') {
-      if (has7 >= 0 && has7 !== sb) out.push(['sette', 'sette', has7, sb]);
-      else if (has7 < 0 && calc[sb]?.[0]) out.push(['sette', 'setteNo7', sb]);
-    }
+    if (has7 >= 0 && has7 !== sb) out.push(['sette', 'sette', has7, sb]);
+    else if (has7 < 0 && calc[sb]?.[0]) out.push(['sette', 'setteNo7', sb]);
+  }
+  // only once every side has all four suits filled in, otherwise the calculator can't know yet
+  if (calc && r.primiera != null && calc.every(row => row.every(Boolean))) {
     const { winner } = primiera(calc);
-    if (winner != null && r.primiera != null && r.primiera !== winner) out.push(['prim', 'prim', winner]);
+    if (winner != null && r.primiera !== winner) out.push(['prim', 'prim', winner]);
   }
   return out;
 }
+const warnList = (warns, seen) => warns.length ? `<div class="warns" role="status">${warns.map(([k, type, ...a]) => `<p class="warn ${seen?.includes(k) ? '' : 'in'}"><i aria-hidden="true">!</i><span>${esc(t().warn[type](...a))}</span><button data-act="warn-x" data-v="${k}" aria-label="${t().warnX}">✕</button></p>`).join('')}</div>` : '';
+const liveWarns = () => sanity({ scope: S.live }, null, S.sides.length, S.teams).filter(([k]) => !ui.dismissed.includes(k));
 function totals() {
   const n = S.sides.length;
   return S.rounds.reduce((acc, r) => { scoreRound(r, n).forEach((p, i) => acc[i] += p); return acc; }, Array(n).fill(0));
@@ -725,7 +728,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const colIdx = i => (S.sides[i]?.color ?? i) % COLORS;
 const col = i => `var(--s${colIdx(i) + 1})`;
 const suitOf = i => SUITS[colIdx(i) % 4];
-const nameOf = i => S.sides[i].name || t().namePh(i + 1);
+const nameOf = i => S.sides[i].name || t().namePh(i + 1, S.teams);
 const sw = c => `<span class="swatch" style="--c:${c}"></span>`;
 
 /* ---------- views ---------- */
@@ -751,19 +754,13 @@ function gameView() {
   html += `<div class="meta"><span class="roundpill">${spr('cards', 1)}<b>${L.roundN(S.rounds.length + (over ? 0 : 1))}</b></span><span class="eyebrow">${L.playTo(S.target)}</span></div>`;
 
   html += `<div class="table">` + S.sides.map((s, i) => {
-    const sc = S.live[i] || 0;
     const lead = max > 0 && tot[i] === max && leaders === 1;
-    const pips = sc === 0 ? '' : sc <= 5
-      ? Array.from({ length: sc }, (_, k) => spr('broom', 1, k === sc - 1 && ui.popIdx === i ? 'new' : '')).join('')
-      : spr('broom', 1, ui.popIdx === i ? 'new' : '') + `<span class="num">× ${sc}</span>`;
     return `
     <div class="pcard ${lead ? 'lead' : ''}" id="pcard-${i}" style="--c:${col(i)}">
       <div class="tile">${spr(suitOf(i), 2)}</div>
       <div class="pinfo">
         <div class="pname"><span>${esc(nameOf(i))}</span>${lead ? spr('crown', 1) : ''}</div>
-        <div class="psub">${sc
-          ? `<span class="pips" aria-label="${L.scopeLbl}: ${sc}">${pips}</span><button class="undo" data-act="unscopa" data-i="${i}" aria-label="${L.undo}">−</button>`
-          : `<span>${L.toGo(S.target - tot[i])}</span>`}</div>
+        <div class="psub">${psub(i, tot)}</div>
       </div>
       <div class="pscore" id="score-${i}" data-from="${prev[i]}" data-to="${tot[i]}">${prev[i]}</div>
       <button class="addscopa" data-act="scopa" data-i="${i}" ${over ? 'disabled' : ''}>${spr('broom', 2)}${L.addScopa}</button>
@@ -771,6 +768,7 @@ function gameView() {
     </div>`;
   }).join('') + '</div>';
 
+  if (!over) { const w = liveWarns(); html += `<div id="live-warns">${warnList(w, ui.lastLive)}</div>`; ui.lastLive = w.map(([k]) => k); }
   if (!over) html += `<button class="btn primary block" data-act="open-round">${spr('seven', 1)}${L.endRound}</button>`;
 
   if (S.rounds.length) {
@@ -789,6 +787,23 @@ function gameView() {
   return html;
 }
 
+function psub(i, tot) {
+  const L = t(), sc = S.live[i] || 0;
+  if (!sc) return `<span>${L.toGo(S.target - tot[i])}</span>`;
+  const pips = sc <= 5
+    ? Array.from({ length: sc }, (_, k) => spr('broom', 1, k === sc - 1 && ui.popIdx === i ? 'new' : '')).join('')
+    : spr('broom', 1, ui.popIdx === i ? 'new' : '') + `<span class="num">× ${sc}</span>`;
+  return `<span class="pips" aria-label="${L.scopeLbl}: ${sc}">${pips}</span><button class="undo" data-act="unscopa" data-i="${i}" aria-label="${L.undo}">−</button>`;
+}
+// scopa taps only touch their own row, so the card never gets rebuilt mid-animation
+function patchLive(i) {
+  const el = document.querySelector(`#pcard-${i} .psub`);
+  if (!el) { render(); return; }
+  el.innerHTML = psub(i, totals());
+  ui.popIdx = -1;
+  const box = document.getElementById('live-warns');
+  if (box) { const w = liveWarns(); box.innerHTML = warnList(w, ui.lastLive); ui.lastLive = w.map(([k]) => k); }
+}
 function setupView() {
   const L = t(), d = ui.setup;
   const running = S.sides.length && (S.rounds.length || S.live.some(Boolean));
@@ -799,11 +814,11 @@ function setupView() {
       ${d.sides.map((s, i) => `
         <div class="setup-row" style="animation-delay:${i * .04}s">
           <button class="colorbtn" style="--c:var(--s${s.color % COLORS + 1})" data-act="setup-color" data-i="${i}" aria-label="${L.color}">${spr(SUITS[s.color % 4], 2)}</button>
-          <input class="text" id="setup-name-${i}" data-in="setup-name" data-i="${i}" value="${esc(s.name)}" placeholder="${esc(L.namePh(i + 1))}" autocomplete="off" autocapitalize="words" enterkeyhint="next">
+          <input class="text" id="setup-name-${i}" data-in="setup-name" data-i="${i}" value="${esc(s.name)}" placeholder="${esc(L.namePh(i + 1, d.teams))}" autocomplete="off" autocapitalize="words" enterkeyhint="next">
           <button class="iconbtn" data-act="setup-remove" data-i="${i}" aria-label="${L.remove}" ${d.sides.length <= 2 ? 'disabled' : ''}>×</button>
         </div>`).join('')}
-      ${d.sides.length < 8 ? `<button class="addrow" data-act="setup-add">+ ${L.addSide}</button>` : ''}
-      <p class="hint">${L.sidesHint}</p>
+      ${d.sides.length < 8 ? `<button class="addrow" data-act="setup-add">+ ${L.addSide(d.teams)}</button>` : ''}
+      <div class="setup-foot"><p class="hint">${L.sidesHint}</p><button class="teamtoggle ${d.teams ? 'on' : ''}" data-act="setup-teams" aria-pressed="${!!d.teams}"><span class="check"></span>${L.teams}</button></div>
     </div>
     <div class="field">
       <span class="eyebrow">${L.target}</span>
@@ -859,7 +874,7 @@ function sheetView() {
   const base = ui.editIndex != null ? all.map((v, i) => v - scoreRound(S.rounds[ui.editIndex], n)[i]) : all;
   const names = { carte: 'Carte', denari: 'Denari', settebello: 'Settebello', primiera: 'Primiera' };
   const openN = CATS.filter(k => d[k] == null).length;
-  const warns = sanity(d, ui.calc, n).filter(([k]) => !ui.dismissed.includes(k));
+  const warns = sanity(d, ui.calc, n, S.teams).filter(([k]) => !ui.dismissed.includes(k));
   ui.curWarns = warns.map(([k]) => k);
   const cat = (key, sub, extra = '', tie = true, body = '') => `
     <section class="cat ${d[key] != null ? 'done' : ''}">
@@ -886,7 +901,7 @@ function sheetView() {
       : `<button class="btn ghost danger" data-act="del-round">${L.del}</button>`) : ''}
   </div>
   <div class="sheet-foot">
-    ${warns.length ? `<div class="warns" role="status">${warns.map(([k, type, ...a]) => `<p class="warn ${ui.lastWarns?.includes(k) ? '' : 'in'}"><i aria-hidden="true">!</i><span>${esc(L.warn[type](...a))}</span><button data-act="warn-x" data-v="${k}" aria-label="${L.warnX}">✕</button></p>`).join('')}</div>` : ''}
+    ${warnList(warns, ui.lastWarns)}
     <div class="progress-row"><div class="progress" aria-hidden="true">${CATS.map((k, j) => `<i class="${d[k] != null ? 'done' : ''} ${d[k] != null && ui.lastDone && !ui.lastDone[j] ? 'new' : ''}"></i>`).join('')}</div><span class="${openN ? 'open' : 'ok'}">${openN ? L.stillOpen(openN) : L.allSet}</span></div>
     <div class="preview">${S.sides.map((s, i) => `<span style="--c:${col(i)}">${sw(col(i))}<em>${esc(nameOf(i))}</em><span class="tot">${base[i]}</span><span class="arrow">→</span><b class="${ui.bumpPrev && pts[i] !== ui.bumpPrev[i] ? 'bump' : ''}">${base[i] + pts[i]}</b>${pts[i] ? `<small>+${pts[i]}</small>` : ''}</span>`).join('')}</div>
     <button class="btn primary block" data-act="save-round">${ui.editIndex != null ? L.saveChanges : L.save}</button>
@@ -923,7 +938,7 @@ de: () => `
         <tr><td>4</td><td>2 Teams à 2, Partner gegenüber</td><td>3 ×</td></tr>
         <tr><td>6</td><td>3 Teams à 2 oder 2 Teams à 3</td><td>2 ×</td></tr>
       </tbody></table></div>
-    <p>Im Team sammeln die Partner ihre Stiche gemeinsam. Im Tracker legst du dann ein Team statt einzelner Spieler an.</p>
+    <p>Im Team sammeln die Partner ihre Stiche gemeinsam. Im Tracker stellst du das beim Anlegen der Partie unter „In Teams spielen“ um.</p>
   </section>
   <section>
     <h3>Ein Zug</h3>
@@ -992,7 +1007,7 @@ en: () => `
         <tr><td>4</td><td>2 teams of 2, partners opposite</td><td>3 ×</td></tr>
         <tr><td>6</td><td>3 teams of 2 or 2 teams of 3</td><td>2 ×</td></tr>
       </tbody></table></div>
-    <p>Partners pool their captured cards. In the tracker, add a team instead of individual players.</p>
+    <p>Partners pool their captured cards. In the tracker, switch on “Play in teams” when setting up the game.</p>
   </section>
   <section>
     <h3>A turn</h3>
@@ -1097,7 +1112,7 @@ function renderSheet() {
   ui.picked = null; ui.stepIdx = -1; ui.sheetEnter = false; ui.bumpPrev = null; ui.lastWarns = ui.curWarns;
 }
 function openSheet(draft, editIndex) {
-  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.calcCell = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null; ui.dismissed = []; ui.lastWarns = null;
+  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.calcCell = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null; ui.lastWarns = null;
   const sheet = document.getElementById('sheet');
   renderSheet();
   document.getElementById('sheet-body').scrollTop = 0;
@@ -1136,8 +1151,10 @@ function confetti() {
 function scopaFx(i) {
   const card = document.getElementById('pcard-' + i);
   if (!card) return;
-  card.classList.add('flash');
-  card.querySelector('.addscopa')?.classList.add('sweep');
+  const btn = card.querySelector('.addscopa');
+  card.classList.remove('flash'); btn?.classList.remove('sweep');
+  void card.offsetWidth;
+  card.classList.add('flash'); btn?.classList.add('sweep');
   const f = document.createElement('span');
   f.className = 'floater'; f.textContent = '+1';
   card.appendChild(f);
@@ -1164,10 +1181,10 @@ document.addEventListener('click', e => {
   switch (act) {
     case 'lang': S.lang = v; persist(); render(); if (ui.draft) renderSheet(); return;
     case 'tab': if (ui.tab === v) return; ui.tab = v; render(); window.scrollTo(0, 0); return;
-    case 'scopa': S.live[i] = (S.live[i] || 0) + 1; ui.popIdx = i; persist(); render(); scopaFx(i); return;
-    case 'unscopa': S.live[i] = Math.max(0, (S.live[i] || 0) - 1); persist(); render(); return;
-    case 'new-game': ui.setup = { sides: S.sides.map(s => ({ ...s })), target: S.target }; ui.tab = 'game'; render(); window.scrollTo(0, 0); return;
-    case 'rematch': S.rounds = []; S.live = S.sides.map(() => 0); ui.shownTot = null; persist(); render(); return;
+    case 'scopa': S.live[i] = (S.live[i] || 0) + 1; ui.popIdx = i; persist(); patchLive(i); scopaFx(i); return;
+    case 'unscopa': S.live[i] = Math.max(0, (S.live[i] || 0) - 1); persist(); patchLive(i); return;
+    case 'new-game': ui.setup = { sides: S.sides.map(s => ({ ...s })), target: S.target, teams: !!S.teams }; ui.tab = 'game'; render(); window.scrollTo(0, 0); return;
+    case 'rematch': S.rounds = []; S.live = S.sides.map(() => 0); ui.dismissed = []; ui.shownTot = null; persist(); render(); return;
     case 'setup-add': {
       const used = ui.setup.sides.map(s => s.color);
       let c = 0; while (used.includes(c) && c < COLORS - 1) c++;
@@ -1177,11 +1194,12 @@ document.addEventListener('click', e => {
     }
     case 'setup-remove': ui.setup.sides.splice(i, 1); render(); return;
     case 'setup-color': ui.setup.sides[i].color = (ui.setup.sides[i].color + 1) % COLORS; render(); return;
+    case 'setup-teams': ui.setup.teams = !ui.setup.teams; render(); return;
     case 'setup-target': ui.setup.target = +v; render(); return;
     case 'setup-cancel': ui.setup = null; render(); return;
     case 'setup-start':
-      S = { lang: S.lang, target: ui.setup.target, sides: ui.setup.sides.map((s, k) => ({ name: s.name.trim() || L.namePh(k + 1), color: s.color })), rounds: [], live: ui.setup.sides.map(() => 0) };
-      ui.setup = null; ui.shownTot = null; persist(); render(); window.scrollTo(0, 0); return;
+      S = { lang: S.lang, target: ui.setup.target, teams: !!ui.setup.teams, sides: ui.setup.sides.map((s, k) => ({ name: s.name.trim() || L.namePh(k + 1, ui.setup.teams), color: s.color })), rounds: [], live: ui.setup.sides.map(() => 0) };
+      ui.setup = null; ui.dismissed = []; ui.shownTot = null; persist(); render(); window.scrollTo(0, 0); return;
     case 'open-round': openSheet(blankRound(S.sides.length, S.live), null); return;
     case 'edit-round': openSheet(JSON.parse(JSON.stringify(S.rounds[i])), i); return;
     case 'close-sheet': closeSheet(); return;
@@ -1205,14 +1223,14 @@ document.addEventListener('click', e => {
       const wasOver = gameResult(totals())?.winner != null;
       const no = ui.editIndex != null ? ui.editIndex + 1 : S.rounds.length + 1;
       if (ui.editIndex != null) S.rounds[ui.editIndex] = d;
-      else { S.rounds.push(d); S.live = S.sides.map(() => 0); }
+      else { S.rounds.push(d); S.live = S.sides.map(() => 0); ui.dismissed = []; }
       persist(); closeSheet(); render();
       ui.undo = before; toast(L.saved(no), true);
       if (!wasOver && gameResult(totals())?.winner != null) { window.scrollTo({ top: 0, behavior: 'smooth' }); confetti(); }
       return;
     }
     case 'toast-undo': if (ui.undo) { S = JSON.parse(ui.undo); ui.undo = null; persist(); render(); toast(L.undone, false); } return;
-    case 'warn-x': ui.dismissed.push(v); renderSheet(); return;
+    case 'warn-x': ui.dismissed.push(v); if (ui.draft) renderSheet(); else render(); return;
     case 'del-round': ui.confirmDel = true; renderSheet(); return;
     case 'del-no': ui.confirmDel = false; renderSheet(); return;
     case 'del-yes': { const before = JSON.stringify(S); S.rounds.splice(ui.editIndex, 1); persist(); closeSheet(); render(); ui.undo = before; toast(L.deleted, true); return; }
