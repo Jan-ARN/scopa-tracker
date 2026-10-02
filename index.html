@@ -272,10 +272,26 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .prim-total { font: 800 20px/1 var(--body); font-variant-numeric: tabular-nums; }
 .prim-flag { font-size: 12px; color: var(--warn); font-weight: 700; }
 .prim-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.suitsel { position: relative; }
-.suitsel .spr { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); pointer-events: none; }
-.suitsel select { width: 100%; appearance: none; -webkit-appearance: none; border: 1.5px solid var(--line); background: var(--card); border-radius: 10px; height: 42px; padding: 0 2px 0 26px; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink); }
-.suitsel select.empty { color: var(--ink-3); font-weight: 500; }
+.prim-side.best .prim-total { color: var(--c); }
+.pcell { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 6px 0 7px; border: 1.5px solid var(--line); background: var(--card); border-radius: 10px; min-width: 0; text-align: left; transition: border-color .15s, transform .12s; }
+.pcell:active { transform: scale(.95); }
+.pcell.on { border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+.pcell span { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
+.pcell b { font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcell small { font-size: 11px; font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.pcell.empty b { color: var(--ink-3); font-weight: 500; }
+.picker { border: 1.5px solid var(--c); border-radius: 12px; padding: 10px; background: color-mix(in srgb, var(--c) 6%, var(--card)); display: flex; flex-direction: column; gap: 8px; animation: rise .25s var(--ease) both; }
+.picker-title { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.picker-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.pcard-opt { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 64px; padding: 6px 2px; border: 1.5px solid var(--card-edge); border-radius: 8px; background: var(--card); box-shadow: 0 2px 0 var(--card-edge); transition: transform .12s, border-color .15s; }
+.pcard-opt:active { transform: translateY(2px); box-shadow: none; }
+.pcard-opt b { font-size: 15px; font-weight: 800; line-height: 1.1; }
+.pcard-opt small { font-size: 10px; color: var(--ink-3); font-weight: 600; min-height: 11px; }
+.pcard-opt em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.pcard-opt.on { border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); background: color-mix(in srgb, var(--c) 14%, var(--card)); }
+.pcard-opt:disabled { opacity: .35; box-shadow: none; }
+.pcard-opt i { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 2px; background: var(--c); }
+.pcard-opt.none { grid-column: 1 / -1; min-height: 38px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .prim-key { font-size: 12px; color: var(--ink-3); margin: 0; }
 .confirm { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); }
 
@@ -302,6 +318,7 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .cards { display: flex; gap: 6px; flex-wrap: wrap; }
 .mini { width: 44px; border: 1.5px solid var(--card-edge); background: var(--card); border-radius: 7px; padding: 6px 0 5px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; box-shadow: var(--shadow); }
 .mini b { font: 800 15px/1 var(--body); }
+.mini.wide { width: auto; padding-inline: 10px; }
 .mini span { font-size: 12px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
 .example { background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
 .example b { color: var(--ink); }
@@ -533,7 +550,9 @@ const spr = (id, scale = 1, cls = '') => { const [w, h] = SPR_SIZE[id]; return `
 const KEY = 'scopa-tracker-v3';
 const SUITS = ['denari', 'coppe', 'spade', 'bastoni'];
 const COLORS = 8;
-const PRIM_CARDS = [ [21, '7'], [18, '6'], [16, 'A'], [15, '5'], [14, '4'], [13, '3'], [12, '2'], [10, 'F'] ];
+// Primiera values per card, strongest first. Re, Cavallo and Fante are the three face cards (no queen in an Italian deck).
+const PRIM = [ ['7', 21], ['6', 18], ['A', 16], ['5', 15], ['4', 14], ['3', 13], ['2', 12], ['R', 10], ['C', 10], ['F', 10] ];
+const PRIM_PTS = Object.fromEntries(PRIM);
 const CATS = ['carte', 'denari', 'settebello', 'primiera'];
 const CAT_ICON = { carte: 'cards', denari: 'denari', settebello: 'seven', primiera: 'crown' };
 
@@ -570,7 +589,9 @@ const T = {
     scopeSub: 'in dieser Runde, live mitgezählt',
     carteSub: 'die meisten Karten', denariSub: 'die meisten Münzen', settebelloSub: 'die Sieben der Münzen', primieraSub: 'beste Karte je Farbe',
     tie: 'Gleichstand', calcOpen: 'Nachrechnen', calcClose: 'Rechner zu',
-    missingSuit: 'Farbe fehlt', primKey: 'F = Fante, Cavallo oder Re (je 10). Wem eine Farbe fehlt, der kann die Primiera nicht gewinnen.',
+    missingSuit: 'Farbe fehlt', primKey: 'Tippe pro Farbe auf die beste Karte. Jede Karte gibt es nur einmal, vergebene sind ausgegraut. Wem eine Farbe fehlt, der kann die Primiera nicht gewinnen.',
+    pickTitle: (suit, name) => `Beste ${suit}-Karte von ${name}`, noCard: 'Keine Karte dieser Farbe',
+    card: { 7: '7', 6: '6', A: 'Ass', 5: '5', 4: '4', 3: '3', 2: '2', R: 'König', C: 'Reiter', F: 'Bube' }, cardIt: { A: 'Asso', R: 'Re', C: 'Cavallo', F: 'Fante' },
     stillOpen: n => `${n} offen`, allSet: 'Alles gewertet',
     save: 'Runde speichern', saveChanges: 'Änderungen speichern',
     saved: n => `Runde ${n} gespeichert`, undoBtn: 'Rückgängig', undone: 'Rückgängig gemacht',
@@ -596,7 +617,9 @@ const T = {
     scopeSub: 'this round, counted live',
     carteSub: 'most cards', denariSub: 'most coins', settebelloSub: 'the seven of coins', primieraSub: 'best card per suit',
     tie: 'Tie', calcOpen: 'Work it out', calcClose: 'Close',
-    missingSuit: 'missing a suit', primKey: 'F = Fante, Cavallo or Re (10 each). A side missing a suit can’t win the primiera.',
+    missingSuit: 'missing a suit', primKey: 'Tap the best card in each suit. Every card exists once, so taken ones are greyed out. A side missing a suit can’t win the primiera.',
+    pickTitle: (suit, name) => `${name}’s best card in ${suit}`, noCard: 'No card of this suit',
+    card: { 7: '7', 6: '6', A: 'Ace', 5: '5', 4: '4', 3: '3', 2: '2', R: 'King', C: 'Knight', F: 'Jack' }, cardIt: { A: 'Asso', R: 'Re', C: 'Cavallo', F: 'Fante' },
     stillOpen: n => `${n} open`, allSet: 'All scored',
     save: 'Save round', saveChanges: 'Save changes',
     saved: n => `Round ${n} saved`, undoBtn: 'Undo', undone: 'Undone',
@@ -625,7 +648,7 @@ function scoreRound(r, n) {
   return pts;
 }
 function primiera(cards) {
-  const prim = cards.map(row => ({ sum: row.reduce((a, v) => a + v, 0), complete: row.every(v => v > 0), touched: row.some(v => v > 0) }));
+  const prim = cards.map(row => ({ sum: row.reduce((a, c) => a + (PRIM_PTS[c] || 0), 0), complete: row.every(Boolean), touched: row.some(Boolean) }));
   const elig = prim.map((p, i) => p.complete ? i : -1).filter(i => i >= 0);
   let winner = null;
   if (elig.length) {
@@ -750,16 +773,30 @@ function chips(cat, cur, allowTie) {
 
 function calcBlock() {
   const L = t();
-  const { prim } = primiera(ui.calc);
+  const { prim, winner } = primiera(ui.calc);
+  const open = ui.calcCell;
+  const cell = (i, si) => {
+    const c = ui.calc[i][si], on = open && open[0] === i && open[1] === si;
+    return `<button class="pcell ${c ? '' : 'empty'} ${on ? 'on' : ''}" data-act="pcell" data-i="${i}" data-s="${si}" aria-label="${esc(nameOf(i))} – ${L.suit[SUITS[si]]}">
+      ${spr(SUITS[si], 1)}<span>${c ? `<b>${L.card[c]}</b><small>${PRIM_PTS[c]}</small>` : `<b>${L.none}</b>`}</span></button>`;
+  };
+  const picker = (i, si) => {
+    const owner = c => ui.calc.findIndex((row, k) => k !== i && row[si] === c);
+    return `<div class="picker" style="--c:${col(i)}">
+      <p class="picker-title">${spr(SUITS[si], 1)}${esc(L.pickTitle(L.suit[SUITS[si]], nameOf(i)))}</p>
+      <div class="picker-grid">${PRIM.map(([c, pts]) => {
+        const o = owner(c), mine = ui.calc[i][si] === c;
+        return `<button class="pcard-opt ${mine ? 'on' : ''}" data-act="pcard" data-i="${i}" data-s="${si}" data-v="${c}" ${o >= 0 ? `disabled title="${esc(nameOf(o))}"` : ''}>
+          <b>${L.card[c]}</b><small>${L.cardIt[c] || ''}</small><em>${pts}</em>${o >= 0 ? `<i style="--c:${col(o)}"></i>` : ''}</button>`;
+      }).join('')}
+        <button class="pcard-opt none" data-act="pcard" data-i="${i}" data-s="${si}" data-v="">${L.noCard}</button>
+      </div></div>`;
+  };
   return `<div class="prim">${S.sides.map((s, i) => `
-    <div class="prim-side">
+    <div class="prim-side ${winner === i ? 'best' : ''}" style="--c:${col(i)}">
       <div class="prim-top">${sw(col(i))}<span class="rname">${esc(nameOf(i))}</span><span class="prim-flag">${prim[i].touched && !prim[i].complete ? L.missingSuit : ''}</span><span class="prim-total">${prim[i].sum}</span></div>
-      <div class="prim-grid">${SUITS.map((su, si) => `
-        <label class="suitsel" title="${L.suit[su]}">${spr(su, 1)}
-          <select id="pc-${i}-${si}" data-in="prim" data-i="${i}" data-s="${si}" aria-label="${esc(nameOf(i))} – ${L.suit[su]}" class="${ui.calc[i][si] ? '' : 'empty'}">
-            <option value="0">${L.none}</option>
-            ${PRIM_CARDS.map(([v, lab]) => `<option value="${v}" ${ui.calc[i][si] === v ? 'selected' : ''}>${lab} · ${v}</option>`).join('')}
-          </select></label>`).join('')}</div>
+      <div class="prim-grid">${SUITS.map((su, si) => cell(i, si)).join('')}</div>
+      ${open && open[0] === i ? picker(i, open[1]) : ''}
     </div>`).join('')}
     <p class="prim-key">${L.primKey}</p></div>`;
 }
@@ -864,7 +901,7 @@ de: () => `
   <section>
     <h3>Primiera</h3>
     <p>Jeder nimmt aus seinen Stichen die <b>beste Karte jeder Farbe</b> und addiert deren Primiera-Werte. Die höchste Summe gewinnt. Hier ist die <b>7 am stärksten</b>, die Bildkarten am schwächsten.</p>
-    <div class="cards">${PRIM_CARDS.map(([v, l]) => `<div class="mini"><b>${l === 'F' ? 'FCR' : l}</b><span>${v}</span></div>`).join('')}</div>
+    <div class="cards">${PRIM.slice(0, 7).map(([c, v]) => `<div class="mini"><b>${t().card[c]}</b><span>${v}</span></div>`).join('')}<div class="mini wide"><b>${t().card.R} · ${t().card.C} · ${t().card.F}</b><span>${10}</span></div></div>
     <div class="example"><span><b>A:</b> 7 Denari, 7 Coppe, 6 Spade, Ass Bastoni = 21 + 21 + 18 + 16 = <b>76</b></span><span><b>B:</b> 7 Denari, Re Coppe, 5 Spade, 7 Bastoni = 21 + 10 + 15 + 21 = <b>67</b></span><span>A bekommt den Punkt.</span></div>
     <p>Meist ist es offensichtlich: wer mehr Siebener hat, dann mehr Sechser. Nur wenn es knapp ist, hilft der Rechner beim Werten. Wem eine Farbe fehlt, der kann die Primiera nicht gewinnen.</p>
   </section>
@@ -933,7 +970,7 @@ en: () => `
   <section>
     <h3>Primiera</h3>
     <p>Each side takes its <b>best card in every suit</b> from its captures and adds up their primiera values. The highest total wins. Here the <b>7 is the strongest</b> card and face cards are the weakest.</p>
-    <div class="cards">${PRIM_CARDS.map(([v, l]) => `<div class="mini"><b>${l === 'F' ? 'FCR' : l}</b><span>${v}</span></div>`).join('')}</div>
+    <div class="cards">${PRIM.slice(0, 7).map(([c, v]) => `<div class="mini"><b>${t().card[c]}</b><span>${v}</span></div>`).join('')}<div class="mini wide"><b>${t().card.R} · ${t().card.C} · ${t().card.F}</b><span>${10}</span></div></div>
     <div class="example"><span><b>A:</b> 7 coins, 7 cups, 6 swords, ace of clubs = 21 + 21 + 18 + 16 = <b>76</b></span><span><b>B:</b> 7 coins, king of cups, 5 swords, 7 clubs = 21 + 10 + 15 + 21 = <b>67</b></span><span>A gets the point.</span></div>
     <p>Usually it’s obvious: whoever has more 7s, then more 6s. Only when it’s close does the calculator help. A side missing a suit can’t win the primiera.</p>
   </section>
@@ -1007,7 +1044,7 @@ function renderSheet() {
   ui.picked = null; ui.stepIdx = -1; ui.sheetEnter = false; ui.bumpPrev = null;
 }
 function openSheet(draft, editIndex) {
-  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null;
+  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.calcCell = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null;
   const sheet = document.getElementById('sheet');
   renderSheet();
   document.getElementById('sheet-body').scrollTop = 0;
@@ -1097,7 +1134,19 @@ document.addEventListener('click', e => {
     case 'close-sheet': closeSheet(); return;
     case 'scope': d.scope[i] = Math.max(0, d.scope[i] + +v); ui.stepIdx = i; renderSheet(); return;
     case 'pick': { const val = v === 'tie' ? 'tie' : +v, cat = el.dataset.cat; d[cat] = d[cat] === val ? null : val; ui.picked = [cat, val]; renderSheet(); return; }
-    case 'calc': ui.calc = ui.calc ? null : S.sides.map(() => [0, 0, 0, 0]); renderSheet(); return;
+    case 'calc': ui.calc = ui.calc ? null : S.sides.map(() => ['', '', '', '']); ui.calcCell = ui.calc ? [0, 0] : null; renderSheet(); return;
+    case 'pcell': ui.calcCell = ui.calcCell && ui.calcCell[0] === i && ui.calcCell[1] === +el.dataset.s ? null : [i, +el.dataset.s]; renderSheet(); return;
+    case 'pcard': {
+      const si = +el.dataset.s;
+      ui.calc[i][si] = v;
+      // the best coin being the 7 means this side holds the settebello
+      if (si === 0 && v === '7' && d.settebello == null) { d.settebello = i; ui.picked = ['settebello', i]; }
+      const next = ui.calc[i].findIndex((c, k) => k > si && !c);
+      ui.calcCell = next >= 0 ? [i, next] : (i + 1 < S.sides.length && ui.calc[i + 1].some(c => !c) ? [i + 1, ui.calc[i + 1].findIndex(c => !c)] : null);
+      const { winner } = primiera(ui.calc);
+      if (winner != null) { d.primiera = winner; ui.picked = ['primiera', winner]; }
+      renderSheet(); return;
+    }
     case 'save-round': {
       const before = JSON.stringify(S);
       const wasOver = gameResult(totals())?.winner != null;
@@ -1131,14 +1180,6 @@ document.addEventListener('input', e => {
   if (el.dataset.in === 'setup-name') ui.setup.sides[+el.dataset.i].name = el.value;
 });
 
-document.addEventListener('change', e => {
-  const el = e.target;
-  if (el.dataset.in !== 'prim') return;
-  ui.calc[+el.dataset.i][+el.dataset.s] = +el.value;
-  const { winner } = primiera(ui.calc);
-  if (winner != null) { ui.draft.primiera = winner; ui.picked = ['primiera', winner]; }
-  renderSheet();
-});
 
 document.getElementById('tab-game-i').innerHTML = spr('tabGame', 4 / 3);
 document.getElementById('tab-rules-i').innerHTML = spr('tabRules', 4 / 3);
