@@ -247,6 +247,13 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .progress i.done { background: var(--accent); }
 .progress i.new { animation: segFill .45s var(--ease); transform-origin: left; }
 @keyframes segFill { from { transform: scaleX(0); } }
+.warns { display: flex; flex-direction: column; gap: 6px; }
+.warn { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 7px 6px 7px 10px; border-radius: 10px; font-size: 13px; line-height: 1.35; font-weight: 600; color: var(--ink-2); background: color-mix(in srgb, var(--warn) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
+.warn.in { animation: warnIn .4s var(--spring); }
+@keyframes warnIn { from { opacity: 0; transform: translateY(6px) scale(.97); } }
+.warn i { flex: none; width: 16px; height: 16px; margin-top: 1px; border-radius: 50%; background: var(--warn); color: var(--card); font-size: 11px; font-weight: 800; line-height: 16px; font-style: normal; text-align: center; }
+.warn span { flex: 1; min-width: 0; }
+.warn button { flex: none; border: 0; background: none; color: var(--ink-3); font-size: 16px; line-height: 1; padding: 1px 6px; margin: -1px 0; border-radius: 6px; }
 
 .cat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color .25s; }
 .cat.done { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
@@ -598,6 +605,13 @@ const T = {
     del: 'Runde löschen', delSure: 'Diese Runde wirklich löschen?', yesDel: 'Löschen', deleted: 'Runde gelöscht',
     suit: { denari: 'Denari', coppe: 'Coppe', spade: 'Spade', bastoni: 'Bastoni' },
     none: '–',
+    warn: {
+      scopeSide: (i, v) => `${v} Scope für ${nameOf(i)} in einer Runde? Das ist sehr viel.`,
+      scopeAll: v => `${v} Scope in einer Runde? Das ist sehr viel.`,
+      sette: (h, sb) => `Laut Rechner hat ${nameOf(h)} die 7 Denari, der Settebello ist aber bei ${nameOf(sb)}.`,
+      setteNo7: sb => `${nameOf(sb)} hat den Settebello, im Rechner steht bei Denari aber nicht die 7.`,
+      prim: w => w === 'tie' ? 'Laut Rechner ist die Primiera ein Gleichstand.' : `Laut Rechner gewinnt ${nameOf(w)} die Primiera.`,
+    }, warnX: 'Hinweis ausblenden',
   },
   en: {
     game: 'Game', rules: 'Rules',
@@ -626,6 +640,13 @@ const T = {
     del: 'Delete round', delSure: 'Delete this round?', yesDel: 'Delete', deleted: 'Round deleted',
     suit: { denari: 'Coins', coppe: 'Cups', spade: 'Swords', bastoni: 'Clubs' },
     none: '–',
+    warn: {
+      scopeSide: (i, v) => `${v} scopas for ${nameOf(i)} in one round? That’s a lot.`,
+      scopeAll: v => `${v} scopas in one round? That’s a lot.`,
+      sette: (h, sb) => `The calculator has the 7 of coins with ${nameOf(h)}, but the settebello is set for ${nameOf(sb)}.`,
+      setteNo7: sb => `${nameOf(sb)} has the settebello, but their best coin in the calculator isn’t the 7.`,
+      prim: w => w === 'tie' ? 'The calculator says the primiera is a tie.' : `The calculator says ${nameOf(w)} wins the primiera.`,
+    }, warnX: 'Dismiss hint',
   }
 };
 
@@ -657,6 +678,23 @@ function primiera(cards) {
     winner = top.length === 1 ? top[0] : 'tie';
   }
   return { prim, winner };
+}
+// plausibility hints: never block, just flag what rarely or never happens in a real round
+function sanity(r, calc, n) {
+  const out = [], sc = r.scope.slice(0, n), sum = sc.reduce((a, b) => a + b, 0);
+  const many = sc.map((v, i) => v >= 5 ? i : -1).filter(i => i >= 0);
+  many.forEach(i => out.push(['scope' + i, 'scopeSide', i, sc[i]]));
+  if (!many.length && sum >= 7) out.push(['scope', 'scopeAll', sum]);
+  if (calc) {
+    const has7 = calc.findIndex(row => row[0] === '7'), sb = r.settebello;
+    if (typeof sb === 'number') {
+      if (has7 >= 0 && has7 !== sb) out.push(['sette', 'sette', has7, sb]);
+      else if (has7 < 0 && calc[sb]?.[0]) out.push(['sette', 'setteNo7', sb]);
+    }
+    const { winner } = primiera(calc);
+    if (winner != null && r.primiera != null && r.primiera !== winner) out.push(['prim', 'prim', winner]);
+  }
+  return out;
 }
 function totals() {
   const n = S.sides.length;
@@ -809,6 +847,8 @@ function sheetView() {
   const base = ui.editIndex != null ? all.map((v, i) => v - scoreRound(S.rounds[ui.editIndex], n)[i]) : all;
   const names = { carte: 'Carte', denari: 'Denari', settebello: 'Settebello', primiera: 'Primiera' };
   const openN = CATS.filter(k => d[k] == null).length;
+  const warns = sanity(d, ui.calc, n).filter(([k]) => !ui.dismissed.includes(k));
+  ui.curWarns = warns.map(([k]) => k);
   const cat = (key, sub, extra = '', tie = true, body = '') => `
     <section class="cat ${d[key] != null ? 'done' : ''}">
       <div class="cat-head"><div>${spr(CAT_ICON[key], 2)}<div><h3>${names[key]}</h3><span class="sub">${sub}</span></div></div>${extra}</div>
@@ -834,6 +874,7 @@ function sheetView() {
       : `<button class="btn ghost danger" data-act="del-round">${L.del}</button>`) : ''}
   </div>
   <div class="sheet-foot">
+    ${warns.length ? `<div class="warns" role="status">${warns.map(([k, type, ...a]) => `<p class="warn ${ui.lastWarns?.includes(k) ? '' : 'in'}"><i aria-hidden="true">!</i><span>${esc(L.warn[type](...a))}</span><button data-act="warn-x" data-v="${k}" aria-label="${L.warnX}">✕</button></p>`).join('')}</div>` : ''}
     <div class="progress-row"><div class="progress" aria-hidden="true">${CATS.map((k, j) => `<i class="${d[k] != null ? 'done' : ''} ${d[k] != null && ui.lastDone && !ui.lastDone[j] ? 'new' : ''}"></i>`).join('')}</div><span class="${openN ? 'open' : 'ok'}">${openN ? L.stillOpen(openN) : L.allSet}</span></div>
     <div class="preview">${S.sides.map((s, i) => `<span style="--c:${col(i)}">${sw(col(i))}<em>${esc(nameOf(i))}</em><span class="tot">${base[i]}</span><span class="arrow">→</span><b class="${ui.bumpPrev && pts[i] !== ui.bumpPrev[i] ? 'bump' : ''}">${base[i] + pts[i]}</b>${pts[i] ? `<small>+${pts[i]}</small>` : ''}</span>`).join('')}</div>
     <button class="btn primary block" data-act="save-round">${ui.editIndex != null ? L.saveChanges : L.save}</button>
@@ -1041,10 +1082,10 @@ function renderSheet() {
   document.getElementById('sheet-body').scrollTop = prev;
   ui.lastPts = scoreRound(ui.draft, S.sides.length);
   ui.lastDone = CATS.map(k => ui.draft[k] != null);
-  ui.picked = null; ui.stepIdx = -1; ui.sheetEnter = false; ui.bumpPrev = null;
+  ui.picked = null; ui.stepIdx = -1; ui.sheetEnter = false; ui.bumpPrev = null; ui.lastWarns = ui.curWarns;
 }
 function openSheet(draft, editIndex) {
-  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.calcCell = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null;
+  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.calcCell = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null; ui.dismissed = []; ui.lastWarns = null;
   const sheet = document.getElementById('sheet');
   renderSheet();
   document.getElementById('sheet-body').scrollTop = 0;
@@ -1159,6 +1200,7 @@ document.addEventListener('click', e => {
       return;
     }
     case 'toast-undo': if (ui.undo) { S = JSON.parse(ui.undo); ui.undo = null; persist(); render(); toast(L.undone, false); } return;
+    case 'warn-x': ui.dismissed.push(v); renderSheet(); return;
     case 'del-round': ui.confirmDel = true; renderSheet(); return;
     case 'del-no': ui.confirmDel = false; renderSheet(); return;
     case 'del-yes': { const before = JSON.stringify(S); S.rounds.splice(ui.editIndex, 1); persist(); closeSheet(); render(); ui.undo = before; toast(L.deleted, true); return; }
