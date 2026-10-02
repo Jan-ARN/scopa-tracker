@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Scopa">
-<meta name="theme-color" content="#ECEAE6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141312" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#E7E9E4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121513" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -20,9 +20,9 @@
 /* Layout: one phone column. Players are stacked rows (suit tile, name + live scopas, score, scopa button).
    Round scoring slides up as a sheet. Tabs pinned to the bottom. Pixel art for every icon, clean sans for all text. */
 :root {
-  --bg: #ECEAE6; --card: #FFFFFF; --card-edge: #DAD6CF; --surface-2: #F3F1ED; --line: #D9D5CE;
-  --ink: #1C1A17; --ink-2: #5A5650; --ink-3: #8A857E;
-  --accent: #23407A; --accent-ink: #FFFFFF; --accent-deep: #142853; --warn: #A3570A;
+  --bg: #E7E9E4; --card: #FFFFFF; --card-edge: #D5D9D1; --surface-2: #F0F2EE; --line: #D3D7CF;
+  --ink: #1A1E1B; --ink-2: #545B56; --ink-3: #868D88;
+  --accent: #1E4B39; --accent-ink: #FFFFFF; --accent-deep: #123326; --warn: #9A5B00;
   --s1: #A8781A; --s2: #B0281F; --s3: #2B4F8C; --s4: #2F6E33; --s5: #7A3E78; --s6: #1F7A7A; --s7: #8A5A2B; --s8: #4A4F5A;
   --shadow: 0 3px 0 rgb(30 40 32 / .10);
   --backdrop: rgb(20 26 22 / .38);
@@ -32,9 +32,9 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141312; --card: #1F1D1B; --card-edge: #312E2A; --surface-2: #292724; --line: #36322E;
-    --ink: #F1EEE8; --ink-2: #BDB7AE; --ink-3: #888279;
-    --accent: #E5B755; --accent-ink: #1C1406; --accent-deep: #A27B2C; --warn: #F0A55A;
+    --bg: #121513; --card: #1C211E; --card-edge: #2B322E; --surface-2: #252B27; --line: #313834;
+    --ink: #EEF0EC; --ink-2: #B4BBB6; --ink-3: #7F8782;
+    --accent: #6CC197; --accent-ink: #0D1511; --accent-deep: #3F8A66; --warn: #E7A64A;
     --s1: #E2B656; --s2: #EC6F63; --s3: #86A8E6; --s4: #7FC37B; --s5: #D193CE; --s6: #5CC4C4; --s7: #D19A62; --s8: #A3A9B5;
     --shadow: 0 3px 0 rgb(0 0 0 / .4);
     --backdrop: rgb(0 0 0 / .55);
@@ -42,9 +42,9 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141312; --card: #1F1D1B; --card-edge: #312E2A; --surface-2: #292724; --line: #36322E;
-  --ink: #F1EEE8; --ink-2: #BDB7AE; --ink-3: #888279;
-  --accent: #E5B755; --accent-ink: #1C1406; --accent-deep: #A27B2C; --warn: #F0A55A;
+  --bg: #121513; --card: #1C211E; --card-edge: #2B322E; --surface-2: #252B27; --line: #313834;
+  --ink: #EEF0EC; --ink-2: #B4BBB6; --ink-3: #7F8782;
+  --accent: #6CC197; --accent-ink: #0D1511; --accent-deep: #3F8A66; --warn: #E7A64A;
   --s1: #E2B656; --s2: #EC6F63; --s3: #86A8E6; --s4: #7FC37B; --s5: #D193CE; --s6: #5CC4C4; --s7: #D19A62; --s8: #A3A9B5;
   --shadow: 0 3px 0 rgb(0 0 0 / .4);
   --backdrop: rgb(0 0 0 / .55);
