@@ -55,8 +55,8 @@
 /* iOS home-screen apps with a translucent status bar size the layout viewport short on pages that
    don't scroll, which lifts the fixed tab bar off the bottom. Making the document at least one
    status bar taller than the screen keeps it pinned. */
-html { min-height: calc(100% + env(safe-area-inset-top, 0px)); -webkit-text-size-adjust: 100%; touch-action: manipulation; }
-body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
+html { background: var(--bg); min-height: calc(100% + env(safe-area-inset-top, 0px)); -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+body { margin: 0; min-height: 100%; background: var(--felt, none) 0 0 / 176px 176px repeat, var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
   /* an app, not a document: no text selection or callouts from double taps and long presses */
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; transition: opacity .25s; }
 html.boot body { opacity: 0; }
@@ -110,6 +110,20 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .enter .table > .pcard:nth-child(2) { animation-delay: .1s; } .enter .table > .pcard:nth-child(3) { animation-delay: .14s; } .enter .table > .pcard:nth-child(4) { animation-delay: .18s; } .enter .table > .pcard:nth-child(n+5) { animation-delay: .22s; }
 .enter.from-r .table > .pcard, .enter.from-l .table > .pcard { animation: none; }
 
+/* Pixel decorations */
+.hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.hand { display: flex; padding: 0 4px 2px 0; flex: none; }
+.hc { position: relative; width: 30px; height: 42px; margin-left: -9px; background: #FBF8EE; border: 2px solid #3A3B36; border-radius: 4px; box-shadow: 2px 2px 0 rgb(0 0 0 / .18); display: grid; place-items: center; }
+.hc:first-child { margin-left: 0; }
+.hc b { position: absolute; top: 1px; left: 3px; font-size: 10px; font-weight: 800; line-height: 1; color: #3A3B36; }
+.hc .spr { margin-top: 6px; }
+.hc:nth-child(1) { transform: translateY(6px) rotate(-9deg); } .hc:nth-child(2) { transform: translateY(1px) rotate(-3deg); }
+.hc:nth-child(3) { transform: translateY(1px) rotate(3deg); } .hc:nth-child(4) { transform: translateY(6px) rotate(9deg); }
+.enter .hc { animation: deal .55s var(--spring) both; } .enter .hc:nth-child(2) { animation-delay: .06s; } .enter .hc:nth-child(3) { animation-delay: .12s; } .enter .hc:nth-child(4) { animation-delay: .18s; }
+@keyframes deal { from { opacity: 0; transform: translateY(24px) rotate(0); } }
+.endmark { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 0 4px; opacity: .45; }
+.endmark i { width: 4px; height: 4px; background: var(--ink-3); }
+
 /* Player rows */
 .table { display: flex; flex-direction: column; gap: 10px; }
 .pcard {
@@ -118,6 +132,15 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
   transition: border-color .3s;
 }
 .pcard.lead { border-color: var(--c); }
+/* five or more at the table: tighter rows so everyone fits on one screen */
+.dense { gap: 8px; }
+.dense .pcard { grid-template-columns: 42px minmax(0, 1fr) auto 72px; padding: 7px 8px 10px 10px; column-gap: 10px; }
+.dense .tile { width: 42px; height: 50px; }
+.dense .tile::before, .dense .tile::after { width: 4px; height: 4px; }
+.dense .tile::before { top: 3px; left: 3px; } .dense .tile::after { bottom: 3px; right: 3px; }
+.dense .pscore { font-size: 34px; }
+.dense .addscopa { width: 72px; height: 54px; gap: 2px; font-size: 12px; }
+.dense .pinfo { gap: 2px; }
 .pcard::after { content: ""; position: absolute; inset: 0; background: var(--c); opacity: 0; pointer-events: none; }
 .pcard.flash { animation: flashBg .7s var(--ease); }
 @keyframes flashBg { from { background: color-mix(in srgb, var(--c) 30%, var(--card)); } }
@@ -138,6 +161,7 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .pips { display: flex; align-items: center; gap: 2px; color: var(--c); }
 .pips .spr.new { animation: pop .55s var(--spring); }
 @keyframes pop { 0% { transform: scale(0) rotate(-30deg); } 60% { transform: scale(1.3) rotate(6deg); } 100% { transform: none; } }
+.pips.over .num { color: var(--warn); }
 .pips .num { font-weight: 700; font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; margin-left: 4px; }
 .undo { position: relative; width: 28px; height: 28px; flex: none; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink-2); font-size: 17px; line-height: 1; padding: 0; display: grid; place-items: center; transition: transform .12s; }
 .undo:active { transform: scale(.9); }
@@ -249,9 +273,11 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .sheet-head h2 { font-size: 22px; }
 .sheet-body { touch-action: manipulation; flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 .sheet-foot { border-top: 1px solid var(--line); background: var(--card); padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; }
-.preview { display: flex; gap: 6px; flex-wrap: wrap; }
-.preview > span { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; padding: 6px 10px 6px 9px; border-radius: 10px; background: var(--surface-2); font-variant-numeric: tabular-nums; max-width: 100%; }
-.preview em { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; max-width: 9em; }
+.preview { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+.preview::-webkit-scrollbar { display: none; }
+.preview > span { display: inline-flex; flex: none; align-items: center; gap: 5px; font-size: 14px; font-weight: 700; padding: 6px 10px 6px 9px; border-radius: 10px; background: var(--surface-2); font-variant-numeric: tabular-nums; }
+.preview > span.up { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 55%, transparent); }
+.preview em { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; max-width: 6.5em; }
 .preview .tot { color: var(--ink-3); font-weight: 600; }
 .preview .arrow { color: var(--ink-3); font-weight: 500; }
 .preview b { font-size: 16px; color: var(--ink); display: inline-block; }
@@ -570,6 +596,24 @@ document.getElementById('sprite').innerHTML = Object.entries(SPRITES).map(([id, 
   return `<symbol id="s-${id}" viewBox="0 0 ${w} ${h}">${Object.entries(byColor).map(([fill, d]) => `<path fill="${fill}" d="${d.join('')}"/>`).join('')}</symbol>`;
 }).join('');
 const spr = (id, scale = 1, cls = '') => { const [w, h] = SPR_SIZE[id]; return `<svg class="spr ${cls}" width="${w * scale}" height="${h * scale}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true"><use href="#s-${id}"/></svg>`; };
+// felt-table backdrop: the four suits as faint pixel silhouettes, tiled behind everything
+(() => {
+  const tile = 176, place = [['denari', 14, 18], ['coppe', 104, 6], ['spade', 58, 96], ['bastoni', 136, 120]];
+  const shape = id => SPRITES[id][0].map((row, y) => {
+    let d = '';
+    for (let x = 0; x < row.length;) { if (row[x] === '.') { x++; continue; } const a = x; while (x < row.length && row[x] !== '.') x++; d += `M${a} ${y}h${x - a}v1h-${x - a}z`; }
+    return d;
+  }).join('');
+  const url = fill => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${tile}" height="${tile}" shape-rendering="crispEdges">${place.map(([id, x, y]) => `<path transform="translate(${x} ${y}) scale(2)" fill="${fill}" d="${shape(id)}"/>`).join('')}</svg>`)}")`;
+  const light = url('rgba(30,75,57,.055)'), dark = url('rgba(108,193,151,.045)');
+  const st = document.createElement('style');
+  st.textContent = `:root{--felt:${light}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--felt:${dark}}}:root[data-theme="dark"]{--felt:${dark}}`;
+  document.head.appendChild(st);
+})();
+// a small fanned hand of cards for headers
+const hand = (cards = [['7', 'denari'], ['A', 'coppe'], ['R', 'spade'], ['3', 'bastoni']]) =>
+  `<div class="hand" aria-hidden="true">${cards.map(([r, su]) => `<span class="hc"><b>${r}</b>${spr(su, 1)}</span>`).join('')}</div>`;
+const endmark = () => `<div class="endmark" aria-hidden="true">${SUITS.map(su => spr(su, 1)).join('<i></i>')}</div>`;
 
 
 const KEY = 'scopa-tracker-v3';
@@ -698,13 +742,14 @@ function primiera(cards) {
   }
   return { prim, winner };
 }
+const maxScopa = (n, teams) => teams ? 18 : 3 * Math.ceil(36 / (3 * n));
 // Hints for input that can't happen in a real round. Only certain contradictions, no "unusual" guesses.
 function sanity(r, calc, n, teams) {
   const out = [], sc = r.scope.slice(0, n), sum = sc.reduce((a, b) => a + b, 0);
   // 36 cards are played per round (40 minus the 4 on the table). A scopa empties the table, so the
   // next play can't be one: at most every other play, 18 per round. Dealt 3 at a time, a solo player
   // gets at most ceil(36 / 3n) hands; with teams we don't know the split, so only the total counts.
-  const maxSide = teams ? 18 : 3 * Math.ceil(36 / (3 * n));
+  const maxSide = maxScopa(n, teams);
   let flagged = false;
   if (maxSide < 18) sc.forEach((v, i) => { if (v > maxSide) { out.push(['scopeMax' + i, 'scopeMax', i, v, maxSide, n]); flagged = true; } });
   if (!flagged && sum > 18) out.push(['scopeAllMax', 'scopeAllMax', sum]);
@@ -794,10 +839,10 @@ function gameView() {
   const tot = totals();
   const res = gameResult(tot);
   const n = S.sides.length;
-  const max = Math.max(...tot);
-  const leaders = tot.filter(v => v === max).length;
   const over = res?.winner != null;
-  const prev = ui.shownTot && ui.shownTot.length === n ? ui.shownTot : tot;
+  const cur = liveTotals();
+  const lead = leadOf(cur);
+  const prev = ui.shownTot && ui.shownTot.length === n ? ui.shownTot : cur;
   let html = '';
 
   if (over) {
@@ -810,18 +855,17 @@ function gameView() {
 
   html += `<div class="meta"><span class="roundpill">${spr('cards', 1)}<b>${L.roundN(S.rounds.length + (over ? 0 : 1))}</b></span><span class="eyebrow">${L.playTo(S.target)}</span></div>`;
 
-  html += `<div class="table">` + S.sides.map((s, i) => {
-    const lead = max > 0 && tot[i] === max && leaders === 1;
+  html += `<div class="table ${n >= 5 ? 'dense' : ''}">` + S.sides.map((s, i) => {
     return `
-    <div class="pcard ${lead ? 'lead' : ''}" id="pcard-${i}" style="--c:${col(i)}">
+    <div class="pcard ${lead === i ? 'lead' : ''}" id="pcard-${i}" style="--c:${col(i)}">
       <div class="tile">${spr(suitOf(i), 2)}</div>
       <div class="pinfo">
-        <div class="pname"><span>${esc(nameOf(i))}</span>${lead ? spr('crown', 1, ui.lastLead === i ? '' : 'new') : ''}</div>
-        <div class="psub">${psub(i, tot)}</div>
+        <div class="pname">${pname(i, lead === i, ui.lastLead !== i)}</div>
+        <div class="psub">${psub(i, cur)}</div>
       </div>
-      <div class="pscore" id="score-${i}" data-from="${prev[i]}" data-to="${tot[i]}">${prev[i]}</div>
+      <div class="pscore" id="score-${i}">${prev[i]}</div>
       <button class="addscopa" data-act="scopa" data-i="${i}" ${over ? 'disabled' : ''}>${spr('broom', 2)}${L.addScopa}</button>
-      <div class="pbar"><i id="bar-${i}" style="width:${Math.min(100, prev[i] / S.target * 100)}%" data-to="${Math.min(100, tot[i] / S.target * 100)}"></i></div>
+      <div class="pbar"><i id="bar-${i}" style="width:${Math.min(100, prev[i] / S.target * 100)}%"></i></div>
     </div>`;
   }).join('') + '</div>';
 
@@ -841,31 +885,47 @@ function gameView() {
     </table></div>`;
   }
   if (!over) html += `<button class="btn ghost" data-act="new-game">${L.newGame}</button>`;
-  ui.lastLead = max > 0 && leaders === 1 ? tot.indexOf(max) : -1;
+  html += endmark();
+  ui.lastLead = lead;
   return html;
 }
 
+const liveTotals = () => totals().map((v, i) => v + (S.live[i] || 0));
+function leadOf(cur) { const max = Math.max(...cur); return max > 0 && cur.filter(v => v === max).length === 1 ? cur.indexOf(max) : -1; }
+const pname = (i, lead, isNew) => `<span>${esc(nameOf(i))}</span>${lead ? spr('crown', 1, isNew ? 'new' : '') : ''}`;
 function psub(i, tot) {
   const L = t(), sc = S.live[i] || 0;
   if (!sc) return `<span>${L.toGo(S.target - tot[i])}</span>`;
   const pips = sc <= 5
     ? Array.from({ length: sc }, (_, k) => spr('broom', 1, k === sc - 1 && ui.popIdx === i ? 'new' : '')).join('')
     : spr('broom', 1, ui.popIdx === i ? 'new' : '') + `<span class="num">× ${sc}</span>`;
-  return `<span class="pips" aria-label="${L.scopeLbl}: ${sc}">${pips}</span><button class="undo" data-act="unscopa" data-i="${i}" aria-label="${L.undo}">−</button>`;
+  const over = sc > Math.min(18, maxScopa(S.sides.length, S.teams));
+  return `<span class="pips ${over ? 'over' : ''}" aria-label="${L.scopeLbl}: ${sc}">${pips}</span><button class="undo" data-act="unscopa" data-i="${i}" aria-label="${L.undo}">−</button>`;
 }
 // scopa taps only touch their own row, so the card never gets rebuilt mid-animation
 function patchLive(i) {
   const el = document.querySelector(`#pcard-${i} .psub`);
   if (!el) { render(); return; }
-  el.innerHTML = psub(i, totals());
+  const cur = liveTotals();
+  el.innerHTML = psub(i, cur);
   ui.popIdx = -1;
+  const lead = leadOf(cur);
+  if (lead !== ui.lastLead) {
+    S.sides.forEach((s, k) => {
+      const card = document.getElementById('pcard-' + k);
+      card?.classList.toggle('lead', lead === k);
+      if (card && (k === lead || k === ui.lastLead)) card.querySelector('.pname').innerHTML = pname(k, lead === k, true);
+    });
+    ui.lastLead = lead;
+  }
+  animateScores(false);
   syncWarns(document.getElementById('live-warns'), liveWarns());
 }
 function setupView() {
   const L = t(), d = ui.setup;
   const running = S.sides.length && (S.rounds.length || S.live.some(Boolean));
   return `
-    <h2>${L.setupTitle}</h2>
+    <div class="hero"><h2>${L.setupTitle}</h2>${hand()}</div>
     <div class="field">
       <span class="eyebrow">${L.sides}</span>
       <div class="setup-rows">${d.sides.map((s, i) => `
@@ -959,7 +1019,7 @@ function sheetView() {
   <div class="sheet-foot">
     <div class="warns" id="sheet-warns" role="status"></div>
     <div class="progress-row"><div class="progress" aria-hidden="true">${CATS.map((k, j) => `<i class="${d[k] != null ? 'done' : ''} ${d[k] != null && ui.lastDone && !ui.lastDone[j] ? 'new' : ''}"></i>`).join('')}</div><span class="${openN ? 'open' : 'ok'}">${openN ? L.stillOpen(openN) : L.allSet}</span></div>
-    <div class="preview">${S.sides.map((s, i) => `<span style="--c:${col(i)}">${sw(col(i))}<em>${esc(nameOf(i))}</em><span class="tot">${base[i]}</span><span class="arrow">→</span><b class="${ui.bumpPrev && pts[i] !== ui.bumpPrev[i] ? 'bump' : ''}">${base[i] + pts[i]}</b>${pts[i] ? `<small>+${pts[i]}</small>` : ''}</span>`).join('')}</div>
+    <div class="preview">${S.sides.map((s, i) => `<span class="${pts[i] ? 'up' : ''}" style="--c:${col(i)}">${sw(col(i))}<em>${esc(nameOf(i))}</em><span class="tot">${base[i]}</span><span class="arrow">→</span><b class="${ui.bumpPrev && pts[i] !== ui.bumpPrev[i] ? 'bump' : ''}">${base[i] + pts[i]}</b></span>`).join('')}</div>
     <button class="btn primary block" data-act="save-round">${ui.editIndex != null ? L.saveChanges : L.save}</button>
   </div>`;
 }
@@ -968,8 +1028,8 @@ const RULES = {
 de: () => `
 <div class="rules">
   <section>
-    <span class="eyebrow">Regole della Scopa</span>
-    <h2>So wird Scopa gespielt</h2>
+    <div class="hero"><div><span class="eyebrow">Regole della Scopa</span>
+    <h2>So wird Scopa gespielt</h2></div>${hand([['A', 'bastoni'], ['7', 'coppe'], ['7', 'denari'], ['R', 'spade']])}</div>
     <p class="lede">Karten vom Tisch stechen, den Tisch abräumen und nach jeder Runde Punkte sammeln. Wer zuerst 11 Punkte hat, gewinnt.</p>
   </section>
   <section>
@@ -1033,12 +1093,13 @@ de: () => `
     <h3>Sieg</h3>
     <p>Gespielt wird meist bis <b>11</b> (auch 16 oder 21). Erreichen mehrere das Ziel in derselben Runde, gewinnt der höhere Stand. Bei Gleichstand an der Spitze wird eine weitere Runde gespielt.</p>
   </section>
+${endmark()}
 </div>`,
 en: () => `
 <div class="rules">
   <section>
-    <span class="eyebrow">Regole della Scopa</span>
-    <h2>How to play Scopa</h2>
+    <div class="hero"><div><span class="eyebrow">Regole della Scopa</span>
+    <h2>How to play Scopa</h2></div>${hand([['A', 'bastoni'], ['7', 'coppe'], ['7', 'denari'], ['R', 'spade']])}</div>
     <p class="lede">Capture cards from the table, sweep it clean when you can, and collect points after each round. First to 11 points wins.</p>
   </section>
   <section>
@@ -1102,6 +1163,7 @@ en: () => `
     <h3>Winning</h3>
     <p>Games usually go to <b>11</b> (sometimes 16 or 21). If several sides pass the target in the same round, the higher score wins. If the leaders are tied, play another round.</p>
   </section>
+${endmark()}
 </div>`
 };
 
@@ -1136,23 +1198,23 @@ function render() {
   syncWakeLock();
 }
 
-function animateScores() {
-  const tot = totals();
-  const changed = ui.shownTot && ui.shownTot.length === tot.length ? tot.map((v, i) => v !== ui.shownTot[i]) : tot.map(() => false);
-  ui.shownTot = tot;
+function animateScores(gain = true) {
+  const cur = liveTotals();
+  const prev = ui.shownTot && ui.shownTot.length === cur.length ? ui.shownTot : cur;
+  ui.shownTot = cur;
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    tot.forEach((v, i) => {
+    cur.forEach((v, i) => {
       const bar = document.getElementById('bar-' + i);
-      if (bar) bar.style.width = bar.dataset.to + '%';
+      if (bar) bar.style.width = Math.min(100, v / S.target * 100) + '%';
       const el = document.getElementById('score-' + i);
       if (!el) return;
-      if (!changed[i]) { el.textContent = v; return; }
-      if (v > +el.dataset.from) document.getElementById('pcard-' + i)?.classList.add('gain');
-      const from = +el.dataset.from, to = v, t0 = performance.now(), dur = 450;
-      el.classList.add('bump');
+      if (v === prev[i]) { el.textContent = v; return; }
+      if (gain && v > prev[i]) document.getElementById('pcard-' + i)?.classList.add('gain');
+      const from = prev[i], t0 = performance.now(), dur = 450;
+      el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
       const step = now => {
         const p = Math.min(1, (now - t0) / dur);
-        el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+        el.textContent = Math.round(from + (v - from) * (1 - Math.pow(1 - p, 3)));
         if (p < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
@@ -1168,7 +1230,18 @@ function renderSheet() {
   const oldBox = ui.sheetEnter ? null : document.getElementById('sheet-warns');
   panel.innerHTML = sheetView();
   syncWarns(adoptBox('sheet-warns', oldBox), ui.sheetWarns, !ui.sheetEnter);
-  if (ui.grow) { const g = panel.querySelector(ui.grow); expand(g); g?.scrollIntoView({ block: 'nearest', behavior: calm() ? 'auto' : 'smooth' }); ui.grow = null; }
+  if (ui.grow) {
+    const g = panel.querySelector(ui.grow), body = document.getElementById('sheet-body'), top = ui.grow === '.prim';
+    expand(g);
+    // the calculator scrolls its section to the top; a picker only as far as needed
+    setTimeout(() => {
+      if (!g?.isConnected) return;
+      if (!top) { g.scrollIntoView({ block: 'nearest', behavior: calm() ? 'auto' : 'smooth' }); return; }
+      const y = body.scrollTop + g.closest('.cat').getBoundingClientRect().top - body.getBoundingClientRect().top - 8;
+      body.scrollTo({ top: y, behavior: calm() ? 'auto' : 'smooth' });
+    }, 330);
+    ui.grow = null;
+  }
   document.getElementById('sheet-body').scrollTop = prev;
   ui.lastPts = scoreRound(ui.draft, S.sides.length);
   ui.lastDone = CATS.map(k => ui.draft[k] != null);
@@ -1249,7 +1322,7 @@ document.addEventListener('click', e => {
     case 'tab': if (ui.tab === v) return; ui.tab = v; render(); window.scrollTo(0, 0); return;
     case 'scopa': S.live[i] = (S.live[i] || 0) + 1; ui.popIdx = i; persist(); patchLive(i); scopaFx(i); return;
     case 'unscopa': S.live[i] = Math.max(0, (S.live[i] || 0) - 1); persist(); patchLive(i); return;
-    case 'new-game': ui.setup = { sides: S.sides.map(s => ({ ...s })), target: S.target, teams: !!S.teams }; ui.tab = 'game'; render(); window.scrollTo(0, 0); return;
+    case 'new-game': ui.setup = { sides: S.sides.map(s => ({ ...s })), target: S.target, teams: false }; ui.tab = 'game'; render(); window.scrollTo(0, 0); return;
     case 'rematch': S.rounds = []; S.live = S.sides.map(() => 0); ui.dismissed = []; ui.parked = null; ui.shownTot = null; persist(); render(); return;
     case 'setup-add': {
       const used = ui.setup.sides.map(s => s.color);

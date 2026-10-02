@@ -1,5 +1,5 @@
 // Offline cache: app shell cache-first, Google Fonts cached on first use.
-const CACHE = 'scopa-v12';
+const CACHE = 'scopa-v13';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
