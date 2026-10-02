@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" class="boot">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -55,8 +55,12 @@
 /* iOS home-screen apps with a translucent status bar size the layout viewport short on pages that
    don't scroll, which lifts the fixed tab bar off the bottom. Making the document at least one
    status bar taller than the screen keeps it pinned. */
-html { min-height: calc(100% + env(safe-area-inset-top, 0px)); -webkit-text-size-adjust: 100%; }
-body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+html { min-height: calc(100% + env(safe-area-inset-top, 0px)); -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
+  /* an app, not a document: no text selection or callouts from double taps and long presses */
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; transition: opacity .25s; }
+html.boot body { opacity: 0; }
+input, textarea { -webkit-user-select: text; user-select: text; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
 button:disabled { cursor: default; }
@@ -102,6 +106,9 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 @keyframes fromL { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
 .enter > *:nth-child(2) { animation-delay: .03s; } .enter > *:nth-child(3) { animation-delay: .06s; } .enter > *:nth-child(4) { animation-delay: .09s; } .enter > *:nth-child(n+5) { animation-delay: .12s; }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.enter .table > .pcard { animation: rise .4s var(--ease) both; }
+.enter .table > .pcard:nth-child(2) { animation-delay: .1s; } .enter .table > .pcard:nth-child(3) { animation-delay: .14s; } .enter .table > .pcard:nth-child(4) { animation-delay: .18s; } .enter .table > .pcard:nth-child(n+5) { animation-delay: .22s; }
+.enter.from-r .table > .pcard, .enter.from-l .table > .pcard { animation: none; }
 
 /* Player rows */
 .table { display: flex; flex-direction: column; gap: 10px; }
@@ -115,8 +122,8 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .pcard.flash { animation: flashBg .7s var(--ease); }
 @keyframes flashBg { from { background: color-mix(in srgb, var(--c) 30%, var(--card)); } }
 .pcard.flash .tile { animation: hit .45s var(--spring); }
-@keyframes flash { 0% { opacity: .38; } 100% { opacity: 0; } }
-@keyframes hit { 0% { transform: scale(1); } 30% { transform: scale(1.08) rotate(-3deg); } 100% { transform: scale(1); } }
+@keyframes flash { 0% { opacity: .25; } 100% { opacity: 0; } }
+@keyframes hit { 0% { transform: scale(1); } 30% { transform: scale(1.06) rotate(-3deg); } 100% { transform: scale(1); } }
 .pcard.gain::after { animation: flash 1.1s var(--ease) .15s both; }
 .tile { position: relative; width: 52px; height: 64px; border: 2px solid var(--c); border-radius: 7px; background: var(--card); display: grid; place-items: center; }
 .tile::before, .tile::after { content: ""; position: absolute; width: 6px; height: 6px; background: var(--c); }
@@ -124,27 +131,28 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .pinfo { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .pname { font-weight: 700; font-size: 17px; line-height: 1.2; display: flex; align-items: center; gap: 7px; min-width: 0; }
 .pname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pname .spr { animation: crownIn .5s var(--spring) both, bob 2.4s ease-in-out .6s infinite; }
+.pname .spr.new { animation: crownIn .5s var(--spring) both, bob .9s ease-in-out .5s 1; }
 @keyframes bob { 0%, 100% { transform: none; } 50% { transform: translateY(-2px) rotate(-6deg); } }
 @keyframes crownIn { from { transform: translateY(-6px) scale(.4); opacity: 0; } }
 .psub { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 14px; color: var(--ink-3); white-space: nowrap; }
 .pips { display: flex; align-items: center; gap: 2px; color: var(--c); }
 .pips .spr.new { animation: pop .55s var(--spring); }
-@keyframes pop { 0% { transform: scale(0) rotate(-60deg); } 55% { transform: scale(1.7) rotate(10deg); } 100% { transform: none; } }
+@keyframes pop { 0% { transform: scale(0) rotate(-30deg); } 60% { transform: scale(1.3) rotate(6deg); } 100% { transform: none; } }
 .pips .num { font-weight: 700; font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; margin-left: 4px; }
-.undo { width: 28px; height: 28px; flex: none; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink-2); font-size: 17px; line-height: 1; padding: 0; display: grid; place-items: center; transition: transform .12s; }
+.undo { position: relative; width: 28px; height: 28px; flex: none; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink-2); font-size: 17px; line-height: 1; padding: 0; display: grid; place-items: center; transition: transform .12s; }
 .undo:active { transform: scale(.9); }
+.undo::before, .warn button::before, .teamtoggle::before { content: ""; position: absolute; inset: -9px; }
 .pscore { font: 700 42px/1 var(--body); font-variant-numeric: tabular-nums; letter-spacing: -.03em; text-align: right; min-width: 1.2em; }
 .pscore.bump { animation: bump .6s var(--spring); }
-@keyframes bump { 0% { transform: scale(1); } 30% { transform: scale(1.45); color: var(--c); } 100% { transform: scale(1); } }
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.15); color: var(--c); } 100% { transform: scale(1); } }
 .addscopa { position: relative; width: 80px; height: 68px; border: 0; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-weight: 700; font-size: 13px; background: color-mix(in srgb, var(--c) 15%, var(--card)); color: var(--ink); box-shadow: 0 4px 0 color-mix(in srgb, var(--c) 55%, var(--card)); transition: transform .1s, box-shadow .1s; color: var(--ink); }
 .addscopa .spr { color: var(--c); transform-origin: 80% 20%; }
 .addscopa.sweep .spr { animation: sweep .5s var(--ease); }
-@keyframes sweep { 0% { transform: rotate(0); } 30% { transform: rotate(-28deg) translateX(-3px); } 65% { transform: rotate(14deg) translateX(3px); } 100% { transform: rotate(0); } }
+@keyframes sweep { 0% { transform: rotate(0); } 30% { transform: rotate(-18deg) translateX(-2px); } 65% { transform: rotate(9deg) translateX(2px); } 100% { transform: rotate(0); } }
 .addscopa:active { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 55%, var(--card)); }
 .addscopa:disabled { opacity: .4; }
 .floater { position: absolute; right: 22px; top: 6px; font-weight: 800; font-size: 26px; text-shadow: 0 2px 0 var(--card); color: var(--c); pointer-events: none; animation: floatUp .8s var(--ease) forwards; z-index: 2; }
-@keyframes floatUp { from { opacity: 0; transform: translateY(18px) scale(.5); } 25% { opacity: 1; transform: translateY(0) scale(1.25); } 60% { opacity: 1; } to { opacity: 0; transform: translateY(-34px) scale(1); } }
+@keyframes floatUp { from { opacity: 0; transform: translateY(14px) scale(.7); } 25% { opacity: 1; transform: none; } 60% { opacity: 1; } to { opacity: 0; transform: translateY(-26px); } }
 .pbar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--surface-2); }
 .pbar i { display: block; height: 100%; background: var(--c); transition: width .7s var(--ease); background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgb(255 255 255 / .22) 6px 8px); }
 
@@ -194,13 +202,13 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .field { display: flex; flex-direction: column; gap: 9px; }
 .hint { font-size: 13px; color: var(--ink-3); margin: 0; }
 .setup-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.teamtoggle { display: inline-flex; align-items: center; gap: 7px; flex: none; border: 0; background: none; padding: 6px 0; font-size: 13px; font-weight: 600; color: var(--ink-3); --c: var(--ink-2); }
+.teamtoggle { position: relative; display: inline-flex; align-items: center; gap: 7px; flex: none; border: 0; background: none; padding: 6px 0; font-size: 13px; font-weight: 600; color: var(--ink-3); --c: var(--ink-2); }
 .teamtoggle .check { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--line); display: grid; place-items: center; transition: background .18s, border-color .18s; }
 .teamtoggle.on { color: var(--ink-2); }
 .teamtoggle.on .check { background: var(--c); border-color: var(--c); }
 .teamtoggle.on .check::after { content: ""; width: 6px; height: 3px; border-left: 2px solid var(--card); border-bottom: 2px solid var(--card); transform: translateY(-1px) rotate(-45deg); }
-#live-warns:empty { display: none; }
-.setup-row { display: grid; grid-template-columns: 48px 1fr 40px; gap: 10px; align-items: center; animation: rise .3s var(--ease) both; }
+.setup-rows { display: flex; flex-direction: column; margin-bottom: -9px; }
+.setup-row { display: grid; grid-template-columns: 48px 1fr 40px; gap: 10px; align-items: center; margin-bottom: 9px; }
 .colorbtn { position: relative; width: 48px; height: 48px; border-radius: 10px; border: 2px solid var(--c); background: var(--card); display: grid; place-items: center; transition: transform .15s var(--spring); }
 .colorbtn:active { transform: scale(.9) rotate(-6deg); }
 .text { width: 100%; min-width: 0; height: 48px; border: 1.5px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 14px; font-size: 17px; font-weight: 600; transition: border-color .2s; }
@@ -218,7 +226,7 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .chip.on { background: color-mix(in srgb, var(--c, var(--ink)) 16%, var(--card)); border-color: var(--c, var(--ink)); }
 .chip.pop { animation: chipPop .45s var(--spring); }
 .chip.pop.on .check { animation: checkPop .45s var(--spring); }
-@keyframes chipPop { 0% { transform: scale(.82); } 50% { transform: scale(1.07); } 100% { transform: none; } }
+@keyframes chipPop { 0% { transform: scale(.94); } 50% { transform: scale(1.03); } 100% { transform: none; } }
 @keyframes checkPop { 0% { transform: scale(0) rotate(-45deg); } 100% { transform: none; } }
 .chip .check { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--line); display: grid; place-items: center; flex: none; transition: background .18s, border-color .18s; }
 .chip.on .check { background: var(--c, var(--ink)); border-color: var(--c, var(--ink)); }
@@ -234,6 +242,8 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .sheet-panel { position: absolute; left: 0; right: 0; bottom: 0; max-width: 600px; margin: 0 auto; max-height: calc(100% - env(safe-area-inset-top, 0px) - 16px); background: var(--bg); border-radius: 22px 22px 0 0; display: flex; flex-direction: column; transform: translateY(100%); transition: transform .38s var(--ease); box-shadow: 0 -8px 30px rgb(0 0 0 / .18); }
 .sheet.open .sheet-backdrop { opacity: 1; }
 .sheet.open .sheet-panel { transform: none; }
+.sheet-panel.dragging { transition: none; }
+.sheet-top { touch-action: none; }
 .grabber { width: 38px; height: 5px; border-radius: 3px; background: var(--line); margin: 8px auto 0; }
 .sheet-head { padding: 6px 16px 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .sheet-head h2 { font-size: 22px; }
@@ -255,13 +265,13 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .progress i.done { background: var(--accent); }
 .progress i.new { animation: segFill .45s var(--ease); transform-origin: left; }
 @keyframes segFill { from { transform: scaleX(0); } }
-.warns { display: flex; flex-direction: column; gap: 6px; }
-.warn { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 7px 6px 7px 10px; border-radius: 10px; font-size: 13px; line-height: 1.35; font-weight: 600; color: var(--ink-2); background: color-mix(in srgb, var(--warn) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
-.warn.in { animation: warnIn .4s var(--spring); }
-@keyframes warnIn { from { opacity: 0; transform: translateY(6px) scale(.97); } }
+.warns { display: flex; flex-direction: column; margin-bottom: calc(-1 * var(--g, 10px)); }
+#live-warns { --g: 14px; }
+.warn { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 var(--g, 10px); padding: 7px 6px 7px 10px; border-radius: 10px; font-size: 13px; line-height: 1.35; font-weight: 600; color: var(--ink-2); background: color-mix(in srgb, var(--warn) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
 .warn i { flex: none; width: 16px; height: 16px; margin-top: 1px; border-radius: 50%; background: var(--warn); color: var(--card); font-size: 11px; font-weight: 800; line-height: 16px; font-style: normal; text-align: center; }
 .warn span { flex: 1; min-width: 0; }
-.warn button { flex: none; border: 0; background: none; color: var(--ink-3); font-size: 16px; line-height: 1; padding: 1px 6px; margin: -1px 0; border-radius: 6px; }
+.warn button { position: relative; flex: none; border: 0; background: none; color: var(--ink-3); font-size: 16px; line-height: 1; padding: 1px 6px; margin: -1px 0; border-radius: 6px; }
+.prim-side .pcell.none b { color: var(--ink-2); font-weight: 700; }
 
 .cat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color .25s; }
 .cat.done { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
@@ -281,7 +291,7 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .stepper output { display: inline-block; min-width: 40px; text-align: center; font: 800 18px/1 var(--body); font-variant-numeric: tabular-nums; }
 
 /* Primiera calculator */
-.prim { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--surface-2); padding-top: 12px; animation: rise .3s var(--ease) both; }
+.prim { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--surface-2); padding-top: 12px; }
 .prim-side { display: flex; flex-direction: column; gap: 6px; }
 .prim-top { display: flex; align-items: center; gap: 8px; }
 .prim-total { font: 800 20px/1 var(--body); font-variant-numeric: tabular-nums; }
@@ -295,7 +305,7 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 .pcell b { font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pcell small { font-size: 11px; font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .pcell.empty b { color: var(--ink-3); font-weight: 500; }
-.picker { border: 1.5px solid var(--c); border-radius: 12px; padding: 10px; background: color-mix(in srgb, var(--c) 6%, var(--card)); display: flex; flex-direction: column; gap: 8px; animation: rise .25s var(--ease) both; }
+.picker { border: 1.5px solid var(--c); border-radius: 12px; padding: 10px; background: color-mix(in srgb, var(--c) 6%, var(--card)); display: flex; flex-direction: column; gap: 8px; }
 .picker-title { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .picker-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .pcard-opt { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 64px; padding: 6px 2px; border: 1.5px solid var(--card-edge); border-radius: 8px; background: var(--card); box-shadow: 0 2px 0 var(--card-edge); transition: transform .12s, border-color .15s; }
@@ -605,7 +615,7 @@ const T = {
     carteSub: 'die meisten Karten', denariSub: 'die meisten Münzen', settebelloSub: 'die Sieben der Münzen', primieraSub: 'beste Karte je Farbe',
     tie: 'Gleichstand', calcOpen: 'Nachrechnen', calcClose: 'Rechner zu',
     missingSuit: 'Farbe fehlt', primKey: 'Tippe pro Farbe auf die beste Karte. Jede Karte gibt es nur einmal, vergebene sind ausgegraut. Wem eine Farbe fehlt, der kann die Primiera nicht gewinnen.',
-    pickTitle: (suit, name) => `Beste ${suit}-Karte von ${name}`, noCard: 'Keine Karte dieser Farbe',
+    pickTitle: (suit, name) => `Beste ${suit}-Karte von ${name}`, noCard: 'Keine Karte dieser Farbe', noneShort: 'keine',
     card: { 7: '7', 6: '6', A: 'Ass', 5: '5', 4: '4', 3: '3', 2: '2', R: 'König', C: 'Reiter', F: 'Bube' }, cardIt: { A: 'Asso', R: 'Re', C: 'Cavallo', F: 'Fante' },
     stillOpen: n => `${n} offen`, allSet: 'Alles gewertet',
     save: 'Runde speichern', saveChanges: 'Änderungen speichern',
@@ -640,7 +650,7 @@ const T = {
     carteSub: 'most cards', denariSub: 'most coins', settebelloSub: 'the seven of coins', primieraSub: 'best card per suit',
     tie: 'Tie', calcOpen: 'Work it out', calcClose: 'Close',
     missingSuit: 'missing a suit', primKey: 'Tap the best card in each suit. Every card exists once, so taken ones are greyed out. A side missing a suit can’t win the primiera.',
-    pickTitle: (suit, name) => `${name}’s best card in ${suit}`, noCard: 'No card of this suit',
+    pickTitle: (suit, name) => `${name}’s best card in ${suit}`, noCard: 'No card of this suit', noneShort: 'none',
     card: { 7: '7', 6: '6', A: 'Ace', 5: '5', 4: '4', 3: '3', 2: '2', R: 'King', C: 'Knight', F: 'Jack' }, cardIt: { A: 'Asso', R: 'Re', C: 'Cavallo', F: 'Fante' },
     stillOpen: n => `${n} open`, allSet: 'All scored',
     save: 'Save round', saveChanges: 'Save changes',
@@ -677,10 +687,11 @@ function scoreRound(r, n) {
   return pts;
 }
 function primiera(cards) {
-  const prim = cards.map(row => ({ sum: row.reduce((a, c) => a + (PRIM_PTS[c] || 0), 0), complete: row.every(Boolean), touched: row.some(Boolean) }));
+  const prim = cards.map(row => ({ sum: row.reduce((a, c) => a + (PRIM_PTS[c] || 0), 0), complete: row.every(c => c && c !== '-'), missing: row.includes('-') }));
   const elig = prim.map((p, i) => p.complete ? i : -1).filter(i => i >= 0);
   let winner = null;
-  if (elig.length) {
+  // decided only once every side is filled in, otherwise a half-entered table would pick a winner
+  if (elig.length && cards.every(row => row.every(Boolean))) {
     const max = Math.max(...elig.map(i => prim[i].sum));
     const top = elig.filter(i => prim[i].sum === max);
     winner = top.length === 1 ? top[0] : 'tie';
@@ -703,13 +714,59 @@ function sanity(r, calc, n, teams) {
     else if (has7 < 0 && calc[sb]?.[0]) out.push(['sette', 'setteNo7', sb]);
   }
   // only once every side has all four suits filled in, otherwise the calculator can't know yet
-  if (calc && r.primiera != null && calc.every(row => row.every(Boolean))) {
+  if (calc && r.primiera != null) {
     const { winner } = primiera(calc);
     if (winner != null && r.primiera !== winner) out.push(['prim', 'prim', winner]);
   }
   return out;
 }
-const warnList = (warns, seen) => warns.length ? `<div class="warns" role="status">${warns.map(([k, type, ...a]) => `<p class="warn ${seen?.includes(k) ? '' : 'in'}"><i aria-hidden="true">!</i><span>${esc(t().warn[type](...a))}</span><button data-act="warn-x" data-v="${k}" aria-label="${t().warnX}">✕</button></p>`).join('')}</div>` : '';
+/* ---------- motion: things that appear or leave grow and shrink in place instead of jumping ---------- */
+const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const EASE = 'cubic-bezier(.2, .8, .2, 1)';
+function expand(el) {
+  if (!el || calm()) return;
+  const cs = getComputedStyle(el), h = el.offsetHeight, mb = cs.marginBottom;
+  el.style.overflow = 'hidden';
+  el.animate([{ height: '0px', marginBottom: '0px', opacity: 0, transform: 'translateY(-6px)' }, { height: h + 'px', marginBottom: mb, opacity: 1, transform: 'none' }],
+    { duration: 300, easing: EASE });
+  setTimeout(() => { el.style.overflow = ''; }, 320);
+}
+function collapse(el, done) {
+  if (!el || calm()) { done?.(); return; }
+  if (el.dataset.leaving) return;
+  el.dataset.leaving = '1';
+  let over = false; const fin = () => { if (!over) { over = true; done?.(); } };
+  const cs = getComputedStyle(el);
+  el.style.overflow = 'hidden'; el.style.pointerEvents = 'none';
+  el.animate([{ height: el.offsetHeight + 'px', marginBottom: cs.marginBottom, opacity: 1 }, { height: '0px', marginBottom: '0px', opacity: 0, transform: 'translateY(-4px)' }],
+    { duration: 240, easing: 'cubic-bezier(.4, 0, .7, .2)', fill: 'forwards' }).onfinish = fin;
+  setTimeout(fin, 320); // finish even if the animation never reports back (backgrounded tab)
+}
+const warnHtml = ([k, type, ...a]) => `<p class="warn" data-k="${k}"><i aria-hidden="true">!</i><span>${esc(t().warn[type](...a))}</span><button data-act="warn-x" data-v="${k}" aria-label="${t().warnX}">✕</button></p>`;
+// diff the notes in a box: keep the ones that stay, grow in new ones, shrink away the rest
+function syncWarns(box, warns, animate = true) {
+  if (!box) return;
+  const want = new Map(warns.map(w => [w[0], w]));
+  [...box.children].forEach(el => {
+    if (el.dataset.leaving) return;
+    const w = want.get(el.dataset.k);
+    if (!w) { animate ? collapse(el, () => el.remove()) : el.remove(); return; }
+    const tmp = document.createElement('div'); tmp.innerHTML = warnHtml(w);
+    el.querySelector('span').textContent = tmp.querySelector('span').textContent;
+    want.delete(el.dataset.k);
+  });
+  want.forEach(w => {
+    const tmp = document.createElement('div'); tmp.innerHTML = warnHtml(w);
+    const el = tmp.firstElementChild; box.appendChild(el);
+    if (animate) expand(el);
+  });
+}
+// a re-render builds a fresh empty box; move the old one in so its notes can animate out
+function adoptBox(id, old) {
+  const fresh = document.getElementById(id);
+  if (old && fresh) { fresh.replaceWith(old); return old; }
+  return fresh;
+}
 const liveWarns = () => sanity({ scope: S.live }, null, S.sides.length, S.teams).filter(([k]) => !ui.dismissed.includes(k));
 function totals() {
   const n = S.sides.length;
@@ -759,7 +816,7 @@ function gameView() {
     <div class="pcard ${lead ? 'lead' : ''}" id="pcard-${i}" style="--c:${col(i)}">
       <div class="tile">${spr(suitOf(i), 2)}</div>
       <div class="pinfo">
-        <div class="pname"><span>${esc(nameOf(i))}</span>${lead ? spr('crown', 1) : ''}</div>
+        <div class="pname"><span>${esc(nameOf(i))}</span>${lead ? spr('crown', 1, ui.lastLead === i ? '' : 'new') : ''}</div>
         <div class="psub">${psub(i, tot)}</div>
       </div>
       <div class="pscore" id="score-${i}" data-from="${prev[i]}" data-to="${tot[i]}">${prev[i]}</div>
@@ -768,7 +825,7 @@ function gameView() {
     </div>`;
   }).join('') + '</div>';
 
-  if (!over) { const w = liveWarns(); html += `<div id="live-warns">${warnList(w, ui.lastLive)}</div>`; ui.lastLive = w.map(([k]) => k); }
+  if (!over) html += `<div class="warns" id="live-warns" role="status"></div>`;
   if (!over) html += `<button class="btn primary block" data-act="open-round">${spr('seven', 1)}${L.endRound}</button>`;
 
   if (S.rounds.length) {
@@ -784,6 +841,7 @@ function gameView() {
     </table></div>`;
   }
   if (!over) html += `<button class="btn ghost" data-act="new-game">${L.newGame}</button>`;
+  ui.lastLead = max > 0 && leaders === 1 ? tot.indexOf(max) : -1;
   return html;
 }
 
@@ -801,8 +859,7 @@ function patchLive(i) {
   if (!el) { render(); return; }
   el.innerHTML = psub(i, totals());
   ui.popIdx = -1;
-  const box = document.getElementById('live-warns');
-  if (box) { const w = liveWarns(); box.innerHTML = warnList(w, ui.lastLive); ui.lastLive = w.map(([k]) => k); }
+  syncWarns(document.getElementById('live-warns'), liveWarns());
 }
 function setupView() {
   const L = t(), d = ui.setup;
@@ -811,12 +868,12 @@ function setupView() {
     <h2>${L.setupTitle}</h2>
     <div class="field">
       <span class="eyebrow">${L.sides}</span>
-      ${d.sides.map((s, i) => `
-        <div class="setup-row" style="animation-delay:${i * .04}s">
+      <div class="setup-rows">${d.sides.map((s, i) => `
+        <div class="setup-row" id="setup-row-${i}">
           <button class="colorbtn" style="--c:var(--s${s.color % COLORS + 1})" data-act="setup-color" data-i="${i}" aria-label="${L.color}">${spr(SUITS[s.color % 4], 2)}</button>
           <input class="text" id="setup-name-${i}" data-in="setup-name" data-i="${i}" value="${esc(s.name)}" placeholder="${esc(L.namePh(i + 1, d.teams))}" autocomplete="off" autocapitalize="words" enterkeyhint="next">
           <button class="iconbtn" data-act="setup-remove" data-i="${i}" aria-label="${L.remove}" ${d.sides.length <= 2 ? 'disabled' : ''}>×</button>
-        </div>`).join('')}
+        </div>`).join('')}</div>
       ${d.sides.length < 8 ? `<button class="addrow" data-act="setup-add">+ ${L.addSide(d.teams)}</button>` : ''}
       <div class="setup-foot"><p class="hint">${L.sidesHint}</p><button class="teamtoggle ${d.teams ? 'on' : ''}" data-act="setup-teams" aria-pressed="${!!d.teams}"><span class="check"></span>${L.teams}</button></div>
     </div>
@@ -842,8 +899,8 @@ function calcBlock() {
   const open = ui.calcCell;
   const cell = (i, si) => {
     const c = ui.calc[i][si], on = open && open[0] === i && open[1] === si;
-    return `<button class="pcell ${c ? '' : 'empty'} ${on ? 'on' : ''}" data-act="pcell" data-i="${i}" data-s="${si}" aria-label="${esc(nameOf(i))} – ${L.suit[SUITS[si]]}">
-      ${spr(SUITS[si], 1)}<span>${c ? `<b>${L.card[c]}</b><small>${PRIM_PTS[c]}</small>` : `<b>${L.none}</b>`}</span></button>`;
+    return `<button class="pcell ${c ? c === '-' ? 'none' : '' : 'empty'} ${on ? 'on' : ''}" data-act="pcell" data-i="${i}" data-s="${si}" aria-label="${esc(nameOf(i))} – ${L.suit[SUITS[si]]}">
+      ${spr(SUITS[si], 1)}<span>${c === '-' ? `<b>${L.noneShort}</b>` : c ? `<b>${L.card[c]}</b><small>${PRIM_PTS[c]}</small>` : `<b>${L.none}</b>`}</span></button>`;
   };
   const picker = (i, si) => {
     const owner = c => ui.calc.findIndex((row, k) => k !== i && row[si] === c);
@@ -854,12 +911,12 @@ function calcBlock() {
         return `<button class="pcard-opt ${mine ? 'on' : ''}" data-act="pcard" data-i="${i}" data-s="${si}" data-v="${c}" ${o >= 0 ? `disabled title="${esc(nameOf(o))}"` : ''}>
           <b>${L.card[c]}</b><small>${L.cardIt[c] || ''}</small><em>${pts}</em>${o >= 0 ? `<i style="--c:${col(o)}"></i>` : ''}</button>`;
       }).join('')}
-        <button class="pcard-opt none" data-act="pcard" data-i="${i}" data-s="${si}" data-v="">${L.noCard}</button>
+        <button class="pcard-opt none ${ui.calc[i][si] === '-' ? 'on' : ''}" data-act="pcard" data-i="${i}" data-s="${si}" data-v="-">${L.noCard}</button>
       </div></div>`;
   };
   return `<div class="prim">${S.sides.map((s, i) => `
     <div class="prim-side ${winner === i ? 'best' : ''}" style="--c:${col(i)}">
-      <div class="prim-top">${sw(col(i))}<span class="rname">${esc(nameOf(i))}</span><span class="prim-flag">${prim[i].touched && !prim[i].complete ? L.missingSuit : ''}</span><span class="prim-total">${prim[i].sum}</span></div>
+      <div class="prim-top">${sw(col(i))}<span class="rname">${esc(nameOf(i))}</span><span class="prim-flag">${prim[i].missing ? L.missingSuit : ''}</span><span class="prim-total">${prim[i].sum}</span></div>
       <div class="prim-grid">${SUITS.map((su, si) => cell(i, si)).join('')}</div>
       ${open && open[0] === i ? picker(i, open[1]) : ''}
     </div>`).join('')}
@@ -874,16 +931,15 @@ function sheetView() {
   const base = ui.editIndex != null ? all.map((v, i) => v - scoreRound(S.rounds[ui.editIndex], n)[i]) : all;
   const names = { carte: 'Carte', denari: 'Denari', settebello: 'Settebello', primiera: 'Primiera' };
   const openN = CATS.filter(k => d[k] == null).length;
-  const warns = sanity(d, ui.calc, n, S.teams).filter(([k]) => !ui.dismissed.includes(k));
-  ui.curWarns = warns.map(([k]) => k);
+  ui.sheetWarns = sanity(d, ui.calc, n, S.teams).filter(([k]) => !ui.dismissed.includes(k));
   const cat = (key, sub, extra = '', tie = true, body = '') => `
     <section class="cat ${d[key] != null ? 'done' : ''}">
       <div class="cat-head"><div>${spr(CAT_ICON[key], 2)}<div><h3>${names[key]}</h3><span class="sub">${sub}</span></div></div>${extra}</div>
       ${chips(key, d[key], tie)}${body}
     </section>`;
   return `
-  <div class="grabber" aria-hidden="true"></div>
-  <div class="sheet-head"><h2>${ui.editIndex != null ? L.editRound(roundNo) : L.sheetTitle(roundNo)}</h2><button class="btn ghost" data-act="close-sheet">${L.close}</button></div>
+  <div class="sheet-top" id="sheet-top"><div class="grabber" aria-hidden="true"></div>
+  <div class="sheet-head"><h2>${ui.editIndex != null ? L.editRound(roundNo) : L.sheetTitle(roundNo)}</h2><button class="btn ghost" data-act="close-sheet">${L.close}</button></div></div>
   <div class="sheet-body ${ui.sheetEnter ? 'enter' : ''}" id="sheet-body">
     <section class="cat done scope-cat">
       <div class="cat-head"><div>${spr('broom', 2)}<div><h3>Scope</h3><span class="sub">${L.scopeSub}</span></div></div></div>
@@ -901,7 +957,7 @@ function sheetView() {
       : `<button class="btn ghost danger" data-act="del-round">${L.del}</button>`) : ''}
   </div>
   <div class="sheet-foot">
-    ${warnList(warns, ui.lastWarns)}
+    <div class="warns" id="sheet-warns" role="status"></div>
     <div class="progress-row"><div class="progress" aria-hidden="true">${CATS.map((k, j) => `<i class="${d[k] != null ? 'done' : ''} ${d[k] != null && ui.lastDone && !ui.lastDone[j] ? 'new' : ''}"></i>`).join('')}</div><span class="${openN ? 'open' : 'ok'}">${openN ? L.stillOpen(openN) : L.allSet}</span></div>
     <div class="preview">${S.sides.map((s, i) => `<span style="--c:${col(i)}">${sw(col(i))}<em>${esc(nameOf(i))}</em><span class="tot">${base[i]}</span><span class="arrow">→</span><b class="${ui.bumpPrev && pts[i] !== ui.bumpPrev[i] ? 'bump' : ''}">${base[i] + pts[i]}</b>${pts[i] ? `<small>+${pts[i]}</small>` : ''}</span>`).join('')}</div>
     <button class="btn primary block" data-act="save-round">${ui.editIndex != null ? L.saveChanges : L.save}</button>
@@ -1067,8 +1123,11 @@ function render() {
   const view = document.getElementById('view');
   const toRules = key.startsWith('rules'), wasRules = ui.viewKey.startsWith('rules');
   const dir = toRules && !wasRules ? ' from-r' : !toRules && wasRules ? ' from-l' : '';
-  view.className = 'stack' + (key !== ui.viewKey ? ' enter' + dir : '');
+  const same = key === ui.viewKey, oldBox = same ? document.getElementById('live-warns') : null;
+  view.className = 'stack' + (same ? '' : ' enter' + dir);
   view.innerHTML = ui.tab === 'rules' ? RULES[S.lang]() : ui.setup ? setupView() : gameView();
+  syncWarns(adoptBox('live-warns', oldBox), liveWarns(), same);
+  if (ui.grow) { expand(document.querySelector(ui.grow)); ui.grow = null; }
   ui.viewKey = key;
   ui.popIdx = -1;
 
@@ -1105,14 +1164,17 @@ function renderSheet() {
   const before = ui.lastPts;
   const prev = document.getElementById('sheet-body')?.scrollTop || 0;
   ui.bumpPrev = before;
+  const oldBox = ui.sheetEnter ? null : document.getElementById('sheet-warns');
   panel.innerHTML = sheetView();
+  syncWarns(adoptBox('sheet-warns', oldBox), ui.sheetWarns, !ui.sheetEnter);
+  if (ui.grow) { const g = panel.querySelector(ui.grow); expand(g); g?.scrollIntoView({ block: 'nearest', behavior: calm() ? 'auto' : 'smooth' }); ui.grow = null; }
   document.getElementById('sheet-body').scrollTop = prev;
   ui.lastPts = scoreRound(ui.draft, S.sides.length);
   ui.lastDone = CATS.map(k => ui.draft[k] != null);
-  ui.picked = null; ui.stepIdx = -1; ui.sheetEnter = false; ui.bumpPrev = null; ui.lastWarns = ui.curWarns;
+  ui.picked = null; ui.stepIdx = -1; ui.sheetEnter = false; ui.bumpPrev = null;
 }
 function openSheet(draft, editIndex) {
-  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.calcCell = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null; ui.lastWarns = null;
+  ui.draft = draft; ui.editIndex = editIndex; ui.confirmDel = false; ui.calc = null; ui.calcCell = null; ui.sheetEnter = true; ui.lastPts = null; ui.lastDone = null;
   const sheet = document.getElementById('sheet');
   renderSheet();
   document.getElementById('sheet-body').scrollTop = 0;
@@ -1120,9 +1182,12 @@ function openSheet(draft, editIndex) {
   document.body.style.overflow = 'hidden';
   requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add('open')));
 }
-function closeSheet() {
+function closeSheet(saved) {
   const sheet = document.getElementById('sheet');
+  // a new round closed without saving stays parked, so a stray tap on the backdrop loses nothing
+  if (!saved && ui.editIndex == null && ui.draft && CATS.some(k => ui.draft[k] != null)) ui.parked = ui.draft;
   ui.draft = null;
+  const panel = document.getElementById('sheet-panel'); panel.style.transform = ''; panel.classList.remove('dragging');
   sheet.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => { if (!ui.draft) sheet.hidden = true; }, 380);
@@ -1184,29 +1249,35 @@ document.addEventListener('click', e => {
     case 'scopa': S.live[i] = (S.live[i] || 0) + 1; ui.popIdx = i; persist(); patchLive(i); scopaFx(i); return;
     case 'unscopa': S.live[i] = Math.max(0, (S.live[i] || 0) - 1); persist(); patchLive(i); return;
     case 'new-game': ui.setup = { sides: S.sides.map(s => ({ ...s })), target: S.target, teams: !!S.teams }; ui.tab = 'game'; render(); window.scrollTo(0, 0); return;
-    case 'rematch': S.rounds = []; S.live = S.sides.map(() => 0); ui.dismissed = []; ui.shownTot = null; persist(); render(); return;
+    case 'rematch': S.rounds = []; S.live = S.sides.map(() => 0); ui.dismissed = []; ui.parked = null; ui.shownTot = null; persist(); render(); return;
     case 'setup-add': {
       const used = ui.setup.sides.map(s => s.color);
       let c = 0; while (used.includes(c) && c < COLORS - 1) c++;
-      ui.setup.sides.push({ name: '', color: c }); render();
+      ui.setup.sides.push({ name: '', color: c }); ui.grow = `#setup-row-${ui.setup.sides.length - 1}`; render();
       document.getElementById(`setup-name-${ui.setup.sides.length - 1}`)?.focus();
       return;
     }
-    case 'setup-remove': ui.setup.sides.splice(i, 1); render(); return;
+    case 'setup-remove': collapse(document.getElementById('setup-row-' + i), () => { ui.setup.sides.splice(i, 1); render(); }); return;
     case 'setup-color': ui.setup.sides[i].color = (ui.setup.sides[i].color + 1) % COLORS; render(); return;
     case 'setup-teams': ui.setup.teams = !ui.setup.teams; render(); return;
     case 'setup-target': ui.setup.target = +v; render(); return;
     case 'setup-cancel': ui.setup = null; render(); return;
     case 'setup-start':
       S = { lang: S.lang, target: ui.setup.target, teams: !!ui.setup.teams, sides: ui.setup.sides.map((s, k) => ({ name: s.name.trim() || L.namePh(k + 1, ui.setup.teams), color: s.color })), rounds: [], live: ui.setup.sides.map(() => 0) };
-      ui.setup = null; ui.dismissed = []; ui.shownTot = null; persist(); render(); window.scrollTo(0, 0); return;
-    case 'open-round': openSheet(blankRound(S.sides.length, S.live), null); return;
+      ui.setup = null; ui.dismissed = []; ui.parked = null; ui.shownTot = null; persist(); render(); window.scrollTo(0, 0); return;
+    case 'open-round': openSheet(ui.parked ? { ...ui.parked, scope: S.live.slice() } : blankRound(S.sides.length, S.live), null); return;
     case 'edit-round': openSheet(JSON.parse(JSON.stringify(S.rounds[i])), i); return;
     case 'close-sheet': closeSheet(); return;
     case 'scope': d.scope[i] = Math.max(0, d.scope[i] + +v); ui.stepIdx = i; renderSheet(); return;
     case 'pick': { const val = v === 'tie' ? 'tie' : +v, cat = el.dataset.cat; d[cat] = d[cat] === val ? null : val; ui.picked = [cat, val]; renderSheet(); return; }
-    case 'calc': ui.calc = ui.calc ? null : S.sides.map(() => ['', '', '', '']); ui.calcCell = ui.calc ? [0, 0] : null; renderSheet(); return;
-    case 'pcell': ui.calcCell = ui.calcCell && ui.calcCell[0] === i && ui.calcCell[1] === +el.dataset.s ? null : [i, +el.dataset.s]; renderSheet(); return;
+    case 'calc':
+      if (ui.calc) { collapse(document.querySelector('.prim'), () => { ui.calc = null; ui.calcCell = null; renderSheet(); }); return; }
+      ui.calc = S.sides.map(() => ['', '', '', '']); ui.calcCell = [0, 0]; ui.grow = '.prim'; renderSheet(); return;
+    case 'pcell': {
+      const si = +el.dataset.s, cur = ui.calcCell;
+      if (cur && cur[0] === i && cur[1] === si) { collapse(document.querySelector('.picker'), () => { ui.calcCell = null; renderSheet(); }); return; }
+      ui.calcCell = [i, si]; if (!cur || cur[0] !== i) ui.grow = '.picker'; renderSheet(); return;
+    }
     case 'pcard': {
       const si = +el.dataset.s;
       ui.calc[i][si] = v;
@@ -1214,6 +1285,7 @@ document.addEventListener('click', e => {
       if (si === 0 && v === '7' && d.settebello == null) { d.settebello = i; ui.picked = ['settebello', i]; }
       const next = ui.calc[i].findIndex((c, k) => k > si && !c);
       ui.calcCell = next >= 0 ? [i, next] : (i + 1 < S.sides.length && ui.calc[i + 1].some(c => !c) ? [i + 1, ui.calc[i + 1].findIndex(c => !c)] : null);
+      if (ui.calcCell && ui.calcCell[0] !== i) ui.grow = '.picker';
       const { winner } = primiera(ui.calc);
       if (winner != null) { d.primiera = winner; ui.picked = ['primiera', winner]; }
       renderSheet(); return;
@@ -1223,19 +1295,46 @@ document.addEventListener('click', e => {
       const wasOver = gameResult(totals())?.winner != null;
       const no = ui.editIndex != null ? ui.editIndex + 1 : S.rounds.length + 1;
       if (ui.editIndex != null) S.rounds[ui.editIndex] = d;
-      else { S.rounds.push(d); S.live = S.sides.map(() => 0); ui.dismissed = []; }
-      persist(); closeSheet(); render();
+      else { S.rounds.push(d); S.live = S.sides.map(() => 0); ui.dismissed = []; ui.parked = null; }
+      persist(); closeSheet(true); render();
       ui.undo = before; toast(L.saved(no), true);
       if (!wasOver && gameResult(totals())?.winner != null) { window.scrollTo({ top: 0, behavior: 'smooth' }); confetti(); }
       return;
     }
     case 'toast-undo': if (ui.undo) { S = JSON.parse(ui.undo); ui.undo = null; persist(); render(); toast(L.undone, false); } return;
-    case 'warn-x': ui.dismissed.push(v); if (ui.draft) renderSheet(); else render(); return;
+    case 'warn-x': {
+      ui.dismissed.push(v);
+      const box = el.closest('.warns');
+      syncWarns(box, box.id === 'sheet-warns' ? ui.sheetWarns.filter(([k]) => k !== v) : liveWarns());
+      if (box.id === 'sheet-warns') ui.sheetWarns = ui.sheetWarns.filter(([k]) => k !== v);
+      return;
+    }
     case 'del-round': ui.confirmDel = true; renderSheet(); return;
     case 'del-no': ui.confirmDel = false; renderSheet(); return;
-    case 'del-yes': { const before = JSON.stringify(S); S.rounds.splice(ui.editIndex, 1); persist(); closeSheet(); render(); ui.undo = before; toast(L.deleted, true); return; }
+    case 'del-yes': { const before = JSON.stringify(S); S.rounds.splice(ui.editIndex, 1); persist(); closeSheet(true); render(); ui.undo = before; toast(L.deleted, true); return; }
   }
 });
+
+(() => {
+  const panel = document.getElementById('sheet-panel');
+  let y0 = null, dy = 0, t0 = 0;
+  panel.addEventListener('touchstart', e => {
+    if (!e.target.closest('#sheet-top') || e.target.closest('button')) return;
+    y0 = e.touches[0].clientY; dy = 0; t0 = performance.now(); panel.classList.add('dragging');
+  }, { passive: true });
+  panel.addEventListener('touchmove', e => {
+    if (y0 == null) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    panel.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  const end = () => {
+    if (y0 == null) return;
+    const fast = dy / (performance.now() - t0) > .5;
+    y0 = null; panel.classList.remove('dragging');
+    if (dy > 110 || (fast && dy > 30)) closeSheet(); else panel.style.transform = '';
+  };
+  panel.addEventListener('touchend', end); panel.addEventListener('touchcancel', end);
+})();
 
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr[data-act]')) { e.preventDefault(); e.target.click(); }
@@ -1255,7 +1354,7 @@ document.addEventListener('input', e => {
 
 document.getElementById('tab-game-i').innerHTML = spr('tabGame', 4 / 3);
 document.getElementById('tab-rules-i').innerHTML = spr('tabRules', 4 / 3);
-render();
+Promise.race([document.fonts?.ready, new Promise(r => setTimeout(r, 400))]).finally(() => { render(); document.documentElement.classList.remove('boot'); });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   // Reload once when a new version takes over, and look for one whenever the app comes back to the foreground.
