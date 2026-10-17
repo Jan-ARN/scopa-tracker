@@ -35,6 +35,7 @@
   --spring: cubic-bezier(.34, 1.56, .64, 1);
   /* gap under the floating tab pill: 10px on flat-bottom screens, just above the home indicator on newer iPhones */
   --dock: max(10px, calc(env(safe-area-inset-bottom, 0px) - 8px));
+  --gutter: max(16px, env(safe-area-inset-left, 0px));
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
@@ -85,11 +86,15 @@ button:disabled { cursor: default; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .spr { display: block; flex: none; image-rendering: pixelated; }
 
-.wrap { max-width: 560px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)); padding-block: env(safe-area-inset-top, 0px) calc(var(--dock) + 64px); }
+.wrap { max-width: 560px; margin: 0 auto; padding-inline: var(--gutter); padding-block: 0 calc(var(--dock) + 64px); }
 .stack { display: flex; flex-direction: column; gap: 14px; }
 
 /* Header */
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px 12px; }
+.top { position: sticky; top: 0; z-index: 6; margin-inline: calc(-1 * var(--gutter)); padding: calc(env(safe-area-inset-top, 0px) + 14px) var(--gutter) 16px; background: var(--bg); }
+/* iOS 26+ lays a Liquid Glass blur over the top edge of home-screen apps, and no meta tag or CSS turns it off.
+   WebKit skips it when a fixed or sticky full-width box with a solid colour sits at the top edge, and uses that
+   colour instead. So the header sticks to the top, spans the whole width, and is opaque (no felt behind it). */
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
 .logo { display: block; color: var(--ink); }
 .lang { display: inline-flex; position: relative; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--card); }
 .lang::before { content: ""; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 999px; background: var(--ink); transition: transform .28s var(--spring); }
@@ -114,7 +119,7 @@ button:disabled { cursor: default; }
 .theme-opt.on, .theme-opt:active { background: var(--surface-2); }
 .theme-opt .tick { margin-left: auto; width: 11px; height: 6px; border: solid var(--accent); border-width: 0 0 2px 2px; transform: translateY(-2px) rotate(-45deg); opacity: 0; }
 .theme-opt.on .tick { opacity: 1; }
-.pixrule { height: 4px; margin-bottom: 16px; background: repeating-linear-gradient(90deg, var(--s1) 0 8px, transparent 8px 12px, var(--s2) 12px 20px, transparent 20px 24px, var(--s3) 24px 32px, transparent 32px 36px, var(--s4) 36px 44px, transparent 44px 48px); opacity: .85; }
+.pixrule { height: 4px; background: repeating-linear-gradient(90deg, var(--s1) 0 8px, transparent 8px 12px, var(--s2) 12px 20px, transparent 20px 24px, var(--s3) 24px 32px, transparent 32px 36px, var(--s4) 36px 44px, transparent 44px 48px); opacity: .85; }
 
 .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); }
 .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -413,8 +418,8 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 /* shorter phones (iPhone 13–16, 16 Pro, SE): tighter spacing so a usual game fits without scrolling.
    The Pro Max / Plus sizes keep the roomier layout. 3–4 players also get the dense rows here (see SHORT). */
 @media (max-height: 900px) {
-  .top { padding-block: 10px 8px; }
-  .pixrule { margin-bottom: 12px; }
+  .top { padding-top: calc(env(safe-area-inset-top, 0px) + 10px); padding-bottom: 12px; }
+  .top-row { padding-bottom: 8px; }
   .stack { gap: 10px; }
   .hist th, .hist td { padding-block: 8px; }
   .endmark { padding-top: 4px; }
@@ -431,19 +436,21 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 
 <div class="wrap">
   <header class="top">
-    <span id="logo" role="img" aria-label="Scopa"></span>
-    <div class="top-r">
-      <div class="themer" id="themer">
-        <button class="theme-btn" id="theme-btn" data-act="theme-menu" aria-haspopup="menu" aria-expanded="false"><span class="tsw" id="theme-sw"></span></button>
-        <div class="theme-menu" id="theme-menu" role="menu"></div>
-      </div>
-      <div class="lang" id="lang" role="group" aria-label="Sprache / Language">
-        <button id="lang-de" data-act="lang" data-v="de">DE</button>
-        <button id="lang-en" data-act="lang" data-v="en">EN</button>
+    <div class="top-row">
+      <span id="logo" role="img" aria-label="Scopa"></span>
+      <div class="top-r">
+        <div class="themer" id="themer">
+          <button class="theme-btn" id="theme-btn" data-act="theme-menu" aria-haspopup="menu" aria-expanded="false"><span class="tsw" id="theme-sw"></span></button>
+          <div class="theme-menu" id="theme-menu" role="menu"></div>
+        </div>
+        <div class="lang" id="lang" role="group" aria-label="Sprache / Language">
+          <button id="lang-de" data-act="lang" data-v="de">DE</button>
+          <button id="lang-en" data-act="lang" data-v="en">EN</button>
+        </div>
       </div>
     </div>
+    <div class="pixrule" aria-hidden="true"></div>
   </header>
-  <div class="pixrule" aria-hidden="true"></div>
   <main id="view"></main>
 </div>
 
