@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Scopa">
 <meta name="theme-color" content="#E7E9E4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121513" media="(prefers-color-scheme: dark)">
+<!-- apply the saved theme before first paint, so a picked theme never flashes the system one -->
+<script>try { const m = localStorage.getItem('scopa-theme'); if (m === 'light' || m === 'dark' || m === 'pink') document.documentElement.dataset.theme = m; } catch {}</script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -31,7 +33,7 @@
   --spring: cubic-bezier(.34, 1.56, .64, 1);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root:not([data-theme]) {
     --bg: #121513; --card: #1C211E; --card-edge: #2B322E; --surface-2: #252B27; --line: #313834;
     --ink: #EEF0EC; --ink-2: #B4BBB6; --ink-3: #7F8782;
     --accent: #6CC197; --accent-ink: #0D1511; --accent-deep: #3F8A66; --warn: #E7A64A;
@@ -49,6 +51,15 @@
   --shadow: 0 3px 0 rgb(0 0 0 / .4);
   --backdrop: rgb(0 0 0 / .55);
   color-scheme: dark;
+}
+/* pink & white: blush table, white cards, raspberry accent. Always light, whatever the system says. */
+:root[data-theme="pink"] {
+  --bg: #F9E8EE; --card: #FFFFFF; --card-edge: #F0CCD9; --surface-2: #FDF3F6; --line: #EFC9D6;
+  --ink: #2B1820; --ink-2: #6E4A58; --ink-3: #A5808E;
+  --accent: #D6336C; --accent-ink: #FFFFFF; --accent-deep: #A11E4E; --warn: #9A5B00;
+  --shadow: 0 3px 0 rgb(150 30 80 / .10);
+  --backdrop: rgb(60 15 35 / .35);
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -79,6 +90,24 @@ button:disabled { cursor: default; }
 .lang[data-v="en"]::before { transform: translateX(100%); }
 .lang button { position: relative; z-index: 1; border: 0; background: none; width: 40px; padding: 5px 0; border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--ink-3); transition: color .2s; }
 .lang button.on { color: var(--card); }
+.top-r { display: flex; align-items: center; gap: 8px; }
+/* theme picker: a round swatch button that drops a small menu */
+.themer { position: relative; z-index: 8; }
+.theme-btn { width: 34px; height: 34px; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 0; display: grid; place-items: center; transition: transform .12s var(--ease); }
+.theme-btn:active { transform: scale(.92); }
+.tsw { width: 18px; height: 18px; border-radius: 999px; flex: none; background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .14); transition: transform .35s var(--spring); }
+.tsw[data-t="auto"] { --a: #F4F5F2; --b: #1C211E; }
+.tsw[data-t="light"] { --a: #E7E9E4; --b: #1E4B39; }
+.tsw[data-t="dark"] { --a: #1C211E; --b: #6CC197; }
+.tsw[data-t="pink"] { --a: #FFFFFF; --b: #D6336C; }
+.themer.open .theme-btn .tsw { transform: rotate(180deg); }
+.theme-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 164px; padding: 5px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px rgb(0 0 0 / .16), var(--shadow);
+  transform-origin: top right; transform: scale(.9) translateY(-4px); opacity: 0; visibility: hidden; transition: transform .2s var(--ease), opacity .15s, visibility 0s .2s; }
+.themer.open .theme-menu { transform: none; opacity: 1; visibility: visible; transition: transform .3s var(--spring), opacity .15s; }
+.theme-opt { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; padding: 9px 10px; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--ink); text-align: left; }
+.theme-opt.on, .theme-opt:active { background: var(--surface-2); }
+.theme-opt .tick { margin-left: auto; width: 11px; height: 6px; border: solid var(--accent); border-width: 0 0 2px 2px; transform: translateY(-2px) rotate(-45deg); opacity: 0; }
+.theme-opt.on .tick { opacity: 1; }
 .pixrule { height: 4px; margin-bottom: 16px; background: repeating-linear-gradient(90deg, var(--s1) 0 8px, transparent 8px 12px, var(--s2) 12px 20px, transparent 20px 24px, var(--s3) 24px 32px, transparent 32px 36px, var(--s4) 36px 44px, transparent 44px 48px); opacity: .85; }
 
 .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); }
@@ -386,9 +415,15 @@ h2 { margin: 0; font: 700 26px/1.15 var(--body); letter-spacing: -.015em; text-w
 <div class="wrap">
   <header class="top">
     <span id="logo" role="img" aria-label="Scopa"></span>
-    <div class="lang" id="lang" role="group" aria-label="Sprache / Language">
-      <button id="lang-de" data-act="lang" data-v="de">DE</button>
-      <button id="lang-en" data-act="lang" data-v="en">EN</button>
+    <div class="top-r">
+      <div class="themer" id="themer">
+        <button class="theme-btn" id="theme-btn" data-act="theme-menu" aria-haspopup="menu" aria-expanded="false"><span class="tsw" id="theme-sw"></span></button>
+        <div class="theme-menu" id="theme-menu" role="menu"></div>
+      </div>
+      <div class="lang" id="lang" role="group" aria-label="Sprache / Language">
+        <button id="lang-de" data-act="lang" data-v="de">DE</button>
+        <button id="lang-en" data-act="lang" data-v="en">EN</button>
+      </div>
     </div>
   </header>
   <div class="pixrule" aria-hidden="true"></div>
@@ -605,9 +640,9 @@ const spr = (id, scale = 1, cls = '') => { const [w, h] = SPR_SIZE[id]; return `
     return d;
   }).join('');
   const url = fill => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${tile}" height="${tile}" shape-rendering="crispEdges">${place.map(([id, x, y]) => `<path transform="translate(${x} ${y}) scale(2)" fill="${fill}" d="${shape(id)}"/>`).join('')}</svg>`)}")`;
-  const light = url('rgba(30,75,57,.055)'), dark = url('rgba(108,193,151,.045)');
+  const light = url('rgba(30,75,57,.055)'), dark = url('rgba(108,193,151,.045)'), pink = url('rgba(214,51,108,.07)');
   const st = document.createElement('style');
-  st.textContent = `:root{--felt:${light}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--felt:${dark}}}:root[data-theme="dark"]{--felt:${dark}}`;
+  st.textContent = `:root{--felt:${light}}@media (prefers-color-scheme: dark){:root:not([data-theme]){--felt:${dark}}}:root[data-theme="dark"]{--felt:${dark}}:root[data-theme="pink"]{--felt:${pink}}`;
   document.head.appendChild(st);
 })();
 // a small fanned hand of cards for headers
@@ -642,6 +677,7 @@ const CAT_ICON = { carte: 'cards', denari: 'denari', settebello: 'seven', primie
 const T = {
   de: {
     game: 'Spiel', rules: 'Regeln',
+    theme: 'Farbschema', themes: { auto: 'System', light: 'Hell', dark: 'Dunkel', pink: 'Rosa' },
     newGame: 'Neue Partie', rematch: 'Revanche',
     endRound: 'Runde werten', playTo: n => `Ziel ${n}`, roundN: n => `Runde ${n}`,
     toGo: n => n > 0 ? `noch ${n}` : 'Ziel erreicht',
@@ -677,6 +713,7 @@ const T = {
   },
   en: {
     game: 'Game', rules: 'Rules',
+    theme: 'Theme', themes: { auto: 'System', light: 'Light', dark: 'Dark', pink: 'Pink' },
     newGame: 'New game', rematch: 'Rematch',
     endRound: 'Score round', playTo: n => `Target ${n}`, roundN: n => `Round ${n}`,
     toGo: n => n > 0 ? `${n} to go` : 'target reached',
@@ -723,6 +760,40 @@ let S = load() || freshState();
 const ui = { tab: 'game', setup: S.sides.length ? null : blankSetup(), draft: null, editIndex: null, confirmDel: false, calc: null,
   popIdx: -1, picked: null, viewKey: '', shownTot: null, undo: null, dismissed: [] };
 const t = () => T[S.lang] || T.de;
+
+/* ---------- theme: follow the system, or pick one; remembered on this device (home-screen app included) ---------- */
+const THEME_KEY = 'scopa-theme', THEMES = ['auto', 'light', 'dark', 'pink'];
+const THEME_BG = { light: '#E7E9E4', dark: '#121513', pink: '#F9E8EE' };
+let theme = (() => { try { const m = localStorage.getItem(THEME_KEY); return THEMES.includes(m) ? m : 'auto'; } catch { return 'auto'; } })();
+function applyTheme() {
+  const root = document.documentElement;
+  if (theme === 'auto') delete root.dataset.theme; else root.dataset.theme = theme;
+  // browser chrome colour: per system scheme on auto, the picked theme's background otherwise
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+    m.content = THEME_BG[theme] || (m.getAttribute('media').includes('dark') ? THEME_BG.dark : THEME_BG.light);
+  });
+}
+function renderTheme() {
+  const L = t();
+  document.getElementById('theme-sw').dataset.t = theme;
+  document.getElementById('theme-btn').setAttribute('aria-label', L.theme);
+  document.getElementById('theme-menu').innerHTML = THEMES.map(m => `<button class="theme-opt ${theme === m ? 'on' : ''}" role="menuitemradio" aria-checked="${theme === m}" data-act="theme" data-v="${m}"><span class="tsw" data-t="${m}"></span>${L.themes[m]}<span class="tick"></span></button>`).join('');
+}
+function setThemeMenu(open) {
+  ui.themeOpen = open;
+  document.getElementById('themer').classList.toggle('open', open);
+  document.getElementById('theme-btn').setAttribute('aria-expanded', open);
+}
+function setTheme(m) {
+  setThemeMenu(false);
+  if (m === theme) return;
+  theme = m;
+  try { localStorage.setItem(THEME_KEY, m); } catch {}
+  const swap = () => { applyTheme(); renderTheme(); };
+  // a soft crossfade where the browser supports it (Safari 18+), an instant swap elsewhere
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(swap); else swap();
+}
+applyTheme();
 
 /* ---------- scoring (pure) ---------- */
 function scoreRound(r, n) {
@@ -1182,6 +1253,7 @@ function render() {
   document.getElementById('tab-rules').classList.toggle('on', ui.tab === 'rules');
   document.getElementById('tab-game-l').textContent = L.game;
   document.getElementById('tab-rules-l').textContent = L.rules;
+  renderTheme();
 
   const key = ui.tab === 'rules' ? 'rules-' + S.lang : ui.setup ? 'setup' : 'game';
   const view = document.getElementById('view');
@@ -1314,6 +1386,8 @@ async function syncWakeLock() {
 document.addEventListener('visibilitychange', syncWakeLock);
 
 /* ---------- events ---------- */
+// tapping anywhere else closes the theme menu (pointerdown: iOS sends no click for taps on plain areas)
+document.addEventListener('pointerdown', e => { if (ui.themeOpen && !e.target.closest('#themer')) setThemeMenu(false); });
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
@@ -1321,6 +1395,8 @@ document.addEventListener('click', e => {
   const d = ui.draft, L = t();
   switch (act) {
     case 'lang': S.lang = v; persist(); render(); if (ui.draft) renderSheet(); return;
+    case 'theme-menu': setThemeMenu(!ui.themeOpen); return;
+    case 'theme': setTheme(v); return;
     case 'tab': if (ui.tab === v) return; ui.tab = v; render(); window.scrollTo(0, 0); return;
     case 'scopa': S.live[i] = (S.live[i] || 0) + 1; ui.popIdx = i; persist(); patchLive(i); scopaFx(i); return;
     case 'unscopa': S.live[i] = Math.max(0, (S.live[i] || 0) - 1); persist(); patchLive(i); return;
@@ -1419,6 +1495,7 @@ document.addEventListener('click', e => {
 
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr[data-act]')) { e.preventDefault(); e.target.click(); }
+  if (e.key === 'Escape' && ui.themeOpen) setThemeMenu(false);
   if (e.key === 'Escape' && ui.draft) closeSheet();
   if (e.key === 'Enter' && e.target.dataset.in === 'setup-name') {
     e.preventDefault();
